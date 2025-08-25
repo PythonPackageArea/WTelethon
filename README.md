@@ -31,6 +31,7 @@
 ## Установка
 
 ```bash
+pip install git+https://github.com/LonamiWebs/Telethon.git
 pip install git+https://github.com/PythonPackageArea/WTelethon.git
 ```
 
@@ -38,26 +39,33 @@ pip install git+https://github.com/PythonPackageArea/WTelethon.git
 
 ```python
 import asyncio
-from telethon_patch import TelegramClient, JsonAttachment, MemoryAttachment
+from telethon_patch import TelegramClient, JsonAttachment, MemoryAttachment, utils
 
 async def main():
     # Создание клиента с JSON вложением
-    json_attachment = await JsonAttachment("account.json").load()
+    memory_attachment = MemoryAttachment(
+        api_id=12345,
+        api_hash="your_api_hash"
+    )
     
     client = TelegramClient(
         "account.session",
-        json_attachment=json_attachment
+        memory_attachment=memory_attachment
     )
     
     await client.connect()
+    try:
     
-    # Проверка авторизации
-    if await client.check_authorization():
+        await client.check_authorization(provoke_error=True):
         print("Авторизован")
         
         # Загрузка информации о пользователе
         await client.load_me_info()
         print(f"Пользователь: {client.memory.first_name}")
+
+    except Exception as exc:
+        if utils.is_dead_error(exc):
+            print("Сессия невалидна")
     
     await client.disconnect()
 
@@ -65,47 +73,11 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Примеры использования
-
-### Работа с вложениями
-
-```python
-# Memory attachment
-memory = MemoryAttachment(
-    api_id=12345,
-    api_hash="your_api_hash"
-)
-
-# JSON attachment
-json_data = JsonAttachment("data.json")
-await json_data.load()
-
-# Заполнение памяти из JSON
-json_data.fill_memory(memory)
-```
-
-### Проверка статуса аккаунта
-
-```python
-# Проверка Premium
-premium_until = await client.load_premium_info()
-if premium_until:
-    print(f"Premium до {premium_until}")
-
-# Проверка спамбота
-is_blocked = await client.check_spambot()
-if is_blocked:
-    print("Аккаунт заблокирован спамботом")
-
-# Двухфакторная авторизация
-await client.check_twofa("password123")
-```
-
 ## Структура проекта
 
 ```
 telethon_patch/
-├── attachments/          # Система вложений
+├── attachments/         # Система вложений
 │   ├── json/            # JSON вложения
 │   ├── memory/          # Память клиента
 │   └── platform/        # Платформенные данные
