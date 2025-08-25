@@ -24,6 +24,9 @@ class ApiEnvironmentFields:
     lang_pack: str = ""
     layer: int
 
+    tz_offset: Optional[int] = None
+    perf_cat: Optional[int] = None
+
 
 class NotificationFields:
     push_token: Optional[str] = None

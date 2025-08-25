@@ -7,6 +7,7 @@ from telethon.sessions import MemorySession, SQLiteSession, StringSession
 
 from wtelethon import tl_types
 from wtelethon.attachments import MemoryAttachment, JsonAttachment
+from wtelethon.attachments.platform.model import PlatformData
 from wtelethon.tools.client.account import (
     AccountHelpTools,
     AccountNotificationTools,
@@ -78,6 +79,7 @@ class TelegramClient(
         json_path: Optional[str] = None,
         json_attachment: Optional[JsonAttachment] = None,
         memory_attachment: Optional[MemoryAttachment] = None,
+        platform_data: Optional[PlatformData] = None,
         layer: Optional[int] = None,
         init_params: Optional[tl_types.JsonObject] = None,
         timeout: int = 10,
@@ -103,6 +105,9 @@ class TelegramClient(
 
         if json_path:
             self.init_json(json_path)
+
+        if platform_data:
+            self.update_client_platform(platform_data)
 
         self._exception_handlers = []
         self._init_params = init_params
