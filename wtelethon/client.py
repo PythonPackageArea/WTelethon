@@ -97,17 +97,6 @@ class TelegramClient(
         entity_cache_limit: int = 5000,
     ):
         """Инициализирует клиент и применяет вложения."""
-        if memory_attachment:
-            self._memory = memory_attachment
-
-        if json_attachment:
-            self._json = json_attachment
-
-        if json_path:
-            self.init_json(json_path)
-
-        if platform_data:
-            self.update_client_platform(platform_data)
 
         self._exception_handlers = []
         self._init_params = init_params
@@ -138,7 +127,19 @@ class TelegramClient(
             entity_cache_limit=entity_cache_limit,
         )
 
+        if memory_attachment:
+            self._memory = memory_attachment
+
+        if json_attachment:
+            self._json = json_attachment
+
+        if json_path:
+            self.init_json(json_path)
+
         self.set_layer(layer)
+
+        if platform_data:
+            self.update_client_platform(platform_data)
 
         if self.json:
             if not self.json.data:

@@ -292,3 +292,29 @@ def hex_to_base64(hex_string: str) -> str:
         Строка в base64.
     """
     return base64.b64encode(bytes.fromhex(hex_string)).decode()
+
+
+def match_lang_code_by_number(phone_number: Optional[str], lang_codes: set[str]) -> str:
+    if not phone_number or not (phone_number := str(phone_number)):
+        return random.choice(lang_codes)
+
+    if not phone_number.startswith("+"):
+        phone_number = "+" + phone_number.lstrip("+0")
+
+    parsed = phonenumbers.parse(phone_number)
+    if not phonenumbers.is_valid_number(parsed):
+        raise ValueError(f"Invalid phone number: {phone_number}")
+
+    country_code = phonenumbers.region_code_for_number(parsed)
+
+    preferred_langs = models.COUNTRY_LANG_CODES.get(country_code, [])
+    for lang in preferred_langs:
+        if lang in lang_codes:
+            return lang
+
+    for lang in preferred_langs:
+        for fallback in models.FALLBACK_LANG_CODES.get(lang, []):
+            if fallback in lang_codes:
+                return fallback
+
+    return random.choice(lang_codes)

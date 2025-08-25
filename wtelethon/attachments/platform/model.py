@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Callable, Optional
 import typing
 from telethon.tl.types import JsonObject, JsonString, JsonNumber, JsonObjectValue
 
+from wtelethon import utils
+
 if TYPE_CHECKING:
     from wtelethon import TelegramClient
 
@@ -62,14 +64,22 @@ class PlatformData:
         if not app_versions:
             raise ValueError(f"No app versions for layer {layer}")
 
+        lang_code = utils.match_lang_code_by_number(
+            client.memory.phone, self.lang_codes
+        )
+        system_lang_codes = [
+            [code for code in self.system_lang_codes if code.startswith(lang_code)]
+            or list(self.system_lang_codes)
+        ]
+
         return {
             "api_id": self.api_id,
             "api_hash": self.api_hash,
             "device_model": random.choice(list(self.device_models)),
             "system_version": random.choice(list(self.system_versions)),
             "app_version": random.choice(list(app_versions)),
-            "lang_code": random.choice(list(self.lang_codes)),
-            "system_lang_code": random.choice(list(self.system_lang_codes)),
+            "lang_code": lang_code,
+            "system_lang_code": random.choice(system_lang_codes),
             "lang_pack": self.lang_pack,
             "params": params,
         }
