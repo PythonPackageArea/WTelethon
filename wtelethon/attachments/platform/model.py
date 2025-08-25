@@ -65,11 +65,10 @@ class PlatformData:
             raise ValueError(f"No app versions for layer {layer}")
 
         lang_code = utils.match_lang_code_by_number(
-            client.memory.phone, self.lang_codes
+            client.memory.phone, list(self.lang_codes)
         )
         system_lang_codes = [
-            [code for code in self.system_lang_codes if code.startswith(lang_code)]
-            or list(self.system_lang_codes)
+            code for code in self.system_lang_codes if code.startswith(lang_code)
         ]
 
         return {

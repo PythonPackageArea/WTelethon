@@ -294,7 +294,9 @@ def hex_to_base64(hex_string: str) -> str:
     return base64.b64encode(bytes.fromhex(hex_string)).decode()
 
 
-def match_lang_code_by_number(phone_number: Optional[str], lang_codes: set[str]) -> str:
+def match_lang_code_by_number(
+    phone_number: Optional[str], lang_codes: list[str]
+) -> str:
     if not phone_number or not (phone_number := str(phone_number)):
         return random.choice(lang_codes)
 
