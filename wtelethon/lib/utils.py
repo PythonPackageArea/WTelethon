@@ -1,10 +1,13 @@
 import datetime
+import base64
 import random
 import re
 import os
 import struct
+import phonenumbers
+from phonenumbers import timezone as phonenumbers_timezone
 from typing import Optional, TYPE_CHECKING
-
+import pytz
 from wtelethon import tl_errors, models, tl_types
 import urllib.parse
 
@@ -246,3 +249,46 @@ def get_private_link_hash(link: str) -> str:
         Хэш из ссылки.
     """
     return link.split("+" if "+" in link else "/")[-1]
+
+
+def match_tz_offset_by_number(phone_number: str) -> int:
+    """Получает смещение часового пояса по номеру телефона. с помощью phonenumbers
+
+    Args:
+        phone_number: Номер телефона.
+
+    Returns:
+        Смещение часового пояса.
+    """
+
+    if not (phone_number := str(phone_number)):
+        return None
+
+    if not phone_number.startswith("+"):
+        phone_number = "+" + phone_number.lstrip("+0")
+
+    parsed = phonenumbers.parse(phone_number)
+    if not phonenumbers.is_valid_number(parsed):
+        raise ValueError(f"Invalid phone number: {phone_number}")
+
+    if not (tz_name := phonenumbers_timezone.time_zones_for_number(parsed)):
+        return None
+
+    tz_offset = int(datetime.datetime.now(tz=tz_name[0]).utcoffset().total_seconds())
+
+    if tz_offset < 0:
+        tz_offset += 24 * 3600
+
+    return tz_offset
+
+
+def hex_to_base64(hex_string: str) -> str:
+    """Преобразует hex строку в base64.
+
+    Args:
+        hex_string: Строка для преобразования.
+
+    Returns:
+        Строка в base64.
+    """
+    return base64.b64encode(bytes.fromhex(hex_string)).decode()
