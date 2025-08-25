@@ -36,19 +36,12 @@ class PlatformData:
         self.lang_pack = ""
 
     def __getattr__(self, item: str) -> any:
-        attr = getattr(self, item, None)
-        if attr is None:
+        try:
+            return object.__getattribute__(self, item)
+        except AttributeError:
             raise AttributeError(f"Attribute {item} not found")
 
-        return attr
-
     def __setattr__(self, item: str, value: any) -> None:
-        if isinstance(value, str):
-            value = [value]
-
-        if isinstance(value, list):
-            value = set(value)
-
         return object.__setattr__(self, item, value)
 
     def get_params(self, client: "TelegramClient") -> Optional[JsonObject]:
@@ -72,11 +65,11 @@ class PlatformData:
         return {
             "api_id": self.api_id,
             "api_hash": self.api_hash,
-            "device_model": random.choice(self.device_models),
-            "system_version": random.choice(self.system_versions),
-            "app_version": random.choice(app_versions),
-            "lang_code": random.choice(self.lang_codes),
-            "system_lang_code": random.choice(self.system_lang_codes),
+            "device_model": random.choice(list(self.device_models)),
+            "system_version": random.choice(list(self.system_versions)),
+            "app_version": random.choice(list(app_versions)),
+            "lang_code": random.choice(list(self.lang_codes)),
+            "system_lang_code": random.choice(list(self.system_lang_codes)),
             "lang_pack": self.lang_pack,
             "params": params,
         }
@@ -85,11 +78,8 @@ class PlatformData:
         self, callback: Callable[["TelegramClient"], JsonObject]
     ) -> "PlatformData":
         signature = inspect.signature(callback)
-        if len(signature.parameters) != 1 or signature.parameters[0].name != "client":
+        if len(signature.parameters) != 1:
             raise ValueError("Callback must take exactly one argument")
-
-        if not isinstance(signature.return_annotation, JsonObject):
-            raise ValueError("Callback must return a JsonObject")
 
         self.params_callback = callback
         return self
@@ -98,12 +88,13 @@ class PlatformData:
         self,
         api_id: Optional[int] = None,
         api_hash: Optional[str] = None,
-        device_model: set[str] = None,
-        system_version: set[str] = None,
+        device_models: set[str] = None,
+        system_versions: set[str] = None,
         app_versions_by_layer: dict[int, set[str]] = None,
         lang_codes: set[str] = None,
         system_lang_codes: set[str] = None,
         lang_pack: str = None,
+        callback: Optional[Callable[["TelegramClient"], JsonObject]] = None,
     ) -> "PlatformData":
 
         for key, value in locals().items():
@@ -111,13 +102,17 @@ class PlatformData:
                 continue
 
             if value is not None:
-                if isinstance(value, str):
+                print(key, value, type(value))
+                if isinstance(value, (str, int)):
                     setattr(self, key, value)
                     continue
 
-                if isinstance(value, (list, set, dict)):
+                elif isinstance(value, (list, set, dict)):
                     getattr(self, key).update(value)
                     continue
+
+        if callback is not None:
+            self.set_params_callback(callback)
 
         return self
 
@@ -131,7 +126,9 @@ class PlatformAttachment:
 
     android: PlatformData
     android_beta: PlatformData
-    android_tgx: PlatformData
+    android_web: PlatformData
+
+    tg_x: PlatformData
 
     ios: PlatformData
 
@@ -140,12 +137,11 @@ class PlatformAttachment:
     web_a: PlatformData
 
     def __getattr__(self, item: str) -> any:
-        attr = getattr(self, item, None)
-        if attr is None:
+        try:
+            return object.__getattribute__(self, item)
+        except AttributeError:
             self.__setattr__(item, PlatformData())
             return self.__getattr__(item)
-
-        return getattr(self, item, None)
 
     def __setattr__(self, item: str, value: any) -> None:
         return object.__setattr__(self, item, value)
