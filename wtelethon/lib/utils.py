@@ -261,7 +261,7 @@ def match_tz_offset_by_number(phone_number: str) -> int:
         Смещение часового пояса.
     """
 
-    if not (phone_number := str(phone_number)):
+    if not phone_number or not (phone_number := str(phone_number)):
         return None
 
     if not phone_number.startswith("+"):
