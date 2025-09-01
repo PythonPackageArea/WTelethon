@@ -5,7 +5,7 @@ import sys
 
 setup(
     name="WTelethon",
-    packages=find_packages(exclude=["tests"]),
+    packages=find_packages(exclude=["examples"]),
     version="0.1.0",
     description="Wrapper for Telethon",
     author="anon",
@@ -16,6 +16,5 @@ setup(
         "pydantic",
         "python_socks[asyncio]",
         "loguru",
-
     ],
 )

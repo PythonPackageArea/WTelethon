@@ -1,6 +1,7 @@
 import inspect
+import traceback
 
-from typing import Awaitable, Callable, TYPE_CHECKING, Any, Union
+from typing import Awaitable, Callable, TYPE_CHECKING, Any, Optional, Union
 
 from telethon.tl.tlobject import TLRequest
 
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
 
 ExceptionFilterType = Callable[[Exception], bool]
 ExceptionHandlerType = Callable[
-    ["TelegramClient", Union[TLRequest, Awaitable], Exception], Any
+    ["TelegramClient", TLRequest, Exception], Optional[TLRequest]
 ]
 
 
@@ -22,27 +23,26 @@ class ExceptionHandlerTools:
 
     async def handle_exception(
         self: "TelegramClient",
-        request: Union[TLRequest, Awaitable],
+        request: TLRequest,
         exception: Exception,
     ):
-        """Обрабатывает исключение.
-
-        Args:
-            request: Запрос.
-            exception: Исключение.
-        """
+        """Обрабатывает исключение."""
         for filter_func, handler in self._exception_handlers:
-            if filter_func(exception):
-                if not inspect.iscoroutinefunction(handler):
-                    handler(self, request, exception)
-                else:
-                    await handler(self, request, exception)
+            if not filter_func(exception):
+                continue
 
-                print(request, type(request))
-                if isinstance(request, TLRequest):
-                    return await self(request)
-                else:
-                    return await request
+            coro = handler(self, request, exception)
+
+            if inspect.iscoroutinefunction(handler):
+                try:
+                    coro = await coro
+                except Exception as exc:
+                    traceback.print_exc()
+
+            print(111, coro, type(coro))
+
+            if coro and isinstance(coro, TLRequest):
+                return await self(coro)
 
         raise exception
 

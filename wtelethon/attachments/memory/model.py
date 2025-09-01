@@ -120,8 +120,8 @@ class MemoryAttachment(
 
     def __iadd__(self, other: "MemoryAttachment") -> "MemoryAttachment":
         for key, value in other.__dict__.items():
-            if key in self.__dict__:
-                self.__setattr__(key, value)
+            self.__setattr__(key, value)
+
         return self
 
     def _to_ts(self, value: datetime.datetime | None):

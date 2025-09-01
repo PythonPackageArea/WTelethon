@@ -110,6 +110,7 @@ class TelegramBaseClient(TelethonBaseClientOriginal):
         response = await self._sender.send(
             functions.InvokeWithLayerRequest(self.get_layer(), req)
         )
+        # print(99, response, type(response))
 
         if isinstance(response, Exception):
             raise response

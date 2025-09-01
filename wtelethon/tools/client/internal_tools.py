@@ -17,13 +17,14 @@ class InternalTools:
         flood_sleep_threshold=None,
     ) -> "TelegramClient":
         try:
-            self.memory.dead_error = False
+            self.memory.dead_status = False
             return await UserMethods._call(
                 self, sender, request, ordered, flood_sleep_threshold
             )
 
         except Exception as exc:
             if utils.is_dead_error(exc):
-                self.memory.dead_error = exc.__class__.__name__
+                self.memory.dead_status = True
+                self.memory.dead_error = exc
 
             return await self.handle_exception(request, exc)

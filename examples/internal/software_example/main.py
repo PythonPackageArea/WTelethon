@@ -7,7 +7,7 @@ from handlers import connect_error_handler, dead_error_handler
 
 from wtelethon import storages, helpers, utils
 
-helpers.logging.set_telethon_logging("off")
+helpers.logging.set_telethon_logging("simple")
 
 
 async def main():

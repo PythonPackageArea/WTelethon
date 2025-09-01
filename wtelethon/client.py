@@ -80,7 +80,6 @@ class TelegramClient(
         json_attachment: Optional[JsonAttachment] = None,
         memory_attachment: Optional[MemoryAttachment] = None,
         platform_data: Optional[PlatformData] = None,
-        layer: Optional[int] = None,
         init_params: Optional[tl_types.JsonObject] = None,
         timeout: int = 10,
         request_retries: int = 5,
@@ -117,7 +116,6 @@ class TelegramClient(
 
         self._exception_handlers = []
         self._init_params = init_params
-        self.set_layer(layer)
 
         if json_attachment is not None:
             self._json = json_attachment

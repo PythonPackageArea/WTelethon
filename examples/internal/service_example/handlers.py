@@ -7,6 +7,7 @@ import traceback
 
 from telethon.tl import TLRequest
 from typing import Union, Callable, Awaitable
+from api_mock import ApiMock
 from wtelethon import (
     TelegramClient,
     JsonAttachment,
@@ -14,25 +15,23 @@ from wtelethon import (
     tl_functions,
     tl_types,
     utils,
-    models,
     helpers,
     storages,
 )
 
-from config import dead_dir_path
+api_mock = ApiMock()
 
 
 async def connect_error_handler(
     client: TelegramClient,
-    request: TLRequest,
+    request: Union[TLRequest, Awaitable],
     exception: ConnectionError,
 ):
-    print(request, type(request), exception)
 
-    with contextlib.suppress(Exception):
+    try:
+
         client.proxy_error()
         client.set_proxy_from_storage()
-
         print(
             "Замена прокси в {} на: {}:{}".format(
                 client.memory.session_file,
@@ -40,24 +39,24 @@ async def connect_error_handler(
                 client.current_proxy.port,
             )
         )
-        await client._handle_auto_reconnect()
-        return request
+        return
+
+    except:
+        pass
 
     raise exception
 
 
 async def dead_error_handler(
     client: TelegramClient,
-    request: TLRequest,
+    request: Union[TLRequest, Awaitable],
     exception: ConnectionError,
 ):
-    print(request, type(request), exception)
+
     await client.check_authorization()
 
     with contextlib.suppress(Exception):
         client.disconnect()
-        client.remove_from_storage_hold()
-        # await client.move_files(dead_dir_path)
-        print(f"Перемещение файла {client.memory.session_file} в {dead_dir_path}")
+        api_mock.update_session_data(client.memory.slug, dead=True)
 
     raise exception

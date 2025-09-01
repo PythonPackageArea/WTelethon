@@ -233,3 +233,15 @@ class ProxyStorage(metaclass=_SingletonMeta):
 
         proxy.usage_update()
         return proxy
+
+    def remove_proxy(self, source: str):
+        """Удаляет прокси из хранилища.
+
+        Args:
+            source: Источник прокси.
+            network_type: Тип прокси - "socks5" или "http".
+        """
+        try:
+            self._proxies.pop(source)
+        except KeyError:
+            raise ValueError("Proxy not found")

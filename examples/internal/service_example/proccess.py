@@ -6,15 +6,16 @@ import traceback
 
 from wtelethon import (
     TelegramClient,
-    JsonAttachment,
-    MemoryAttachment,
-    tl_functions,
     utils,
     helpers,
     storages,
+    MemoryAttachment,
 )
 
-from config import dead_dir_path
+from api_mock import ApiMock
+from handlers import connect_error_handler, dead_error_handler
+
+api_mock = ApiMock()
 
 
 async def client_proccess(client: "TelegramClient"):
@@ -28,13 +29,40 @@ async def client_proccess(client: "TelegramClient"):
 
     await client.connect()
     await client.check_authorization()
-    print("done")
+
+
+async def get_client():
+    session_data = api_mock.get_session_data()
+    if session_data is None:
+        print("Нет данных для клиента")
+        return
+
+    client = TelegramClient(
+        session_data.string_session,
+        memory_attachment=MemoryAttachment(
+            api_id=session_data.api_id,
+            api_hash=session_data.api_hash,
+            device_model=session_data.device_model,
+            system_version=session_data.system_version,
+            app_version=session_data.app_version,
+            lang_code=session_data.lang_code,
+            system_lang_code=session_data.system_lang_code,
+            layer=session_data.layer,
+            slug=session_data.slug,
+        ),
+    )
+
+    client.add_exception_handler(utils.is_connection_error, connect_error_handler)
+    client.add_exception_handler(utils.is_dead_error, dead_error_handler)
+
+    return client
 
 
 async def _proccess():
-    client: "TelegramClient" = storages.client_holds_storage.get_free_client()
+
+    client = await get_client()
     if client is None:
-        print("Нет свободных клиентов")
+        print("Нет данных для клиента")
         return
 
     try:
@@ -62,7 +90,7 @@ async def _proccess():
             raise exc
 
 
-async def run_software():
+async def run_service():
     while True:
 
         await _proccess()
