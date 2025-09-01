@@ -14,6 +14,8 @@ from telethon.sessions import Session
 from telethon.tl import functions
 from telethon.tl.alltlobjects import LAYER
 
+import inspect
+
 if typing.TYPE_CHECKING:
     from wtelethon import TelegramClient
 
@@ -33,18 +35,22 @@ class TelegramBaseClient(TelethonBaseClientOriginal):
                 "The asyncio event loop must not change after connection (see the FAQ for details)"
             )
 
-        if not await self._sender.connect(
-            self._connection(
-                self.session.server_address,
-                self.session.port,
-                self.session.dc_id,
-                loggers=self._log,
-                proxy=self._proxy,
-                local_addr=self._local_addr,
-            )
-        ):
-            # We don't want to init or modify anything if we were already connected
-            return
+        try:
+            if not await self._sender.connect(
+                self._connection(
+                    self.session.server_address,
+                    self.session.port,
+                    self.session.dc_id,
+                    loggers=self._log,
+                    proxy=self._proxy,
+                    local_addr=self._local_addr,
+                )
+            ):
+                # We don't want to init or modify anything if we were already connected
+                return
+
+        except Exception as e:
+            return await self.handle_exception(self.connect(), e)
 
         self.session.auth_key = self._sender.auth_key
         self.session.save()

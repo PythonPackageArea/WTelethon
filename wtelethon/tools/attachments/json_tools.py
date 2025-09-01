@@ -43,7 +43,7 @@ class JsonAttachmentTools:
         self._json = JsonAttachment(file_path=file_path, include_data=include_data)
         return True
 
-    async def load_json_info(self: "TelegramClient") -> bool:
+    async def load_json_info(self: "TelegramClient", reinit: bool = True) -> bool:
         """Загружает данные из JSON и применяет к памяти клиента.
 
         Returns:
@@ -57,8 +57,11 @@ class JsonAttachmentTools:
             raise ValueError("json is not set")
 
         await self.json.load()
-        self.json.fill_memory(self.memory)
-        self._super_init()
+        await self.dump_json_info()
+
+        if reinit:
+            self._super_init()
+
         return True
 
     async def dump_json_info(self: "TelegramClient") -> bool:
@@ -76,6 +79,7 @@ class JsonAttachmentTools:
         if self.json is None:
             raise ValueError("json is not set")
 
-        self.memory.fill_json(self.json)
-        await self.json.save()
+        if self.memory.fill_json(self.json):
+            await self.json.save()
+
         return True

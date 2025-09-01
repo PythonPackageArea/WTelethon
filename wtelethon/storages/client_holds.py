@@ -21,6 +21,11 @@ class ClientHoldsStorage(metaclass=_SingletonMeta):
         """Добавляет клиента в хранилище с текущим временем."""
         self._holds[client] = time.time()
 
+    def remove_client(self, client: "TelegramClient"):
+        """Удаляет клиента из хранилища."""
+        with contextlib.suppress(KeyError):
+            self._holds.pop(client)
+
     def add_hold(self, client: "TelegramClient", add_hold: int = 60):
         """Добавляет временную блокировку для клиента.
 
@@ -39,7 +44,7 @@ class ClientHoldsStorage(metaclass=_SingletonMeta):
         with contextlib.suppress(KeyError):
             self._holds.pop(client)
 
-    def get_free_client(self, client: "TelegramClient") -> Optional["TelegramClient"]:
+    def get_free_client(self) -> Optional["TelegramClient"]:
         """Возвращает свободный клиент, если время блокировки истекло.
 
         Args:

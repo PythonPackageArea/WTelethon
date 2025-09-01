@@ -26,11 +26,4 @@ class InternalTools:
             if utils.is_dead_error(exc):
                 self.memory.dead_error = exc.__class__.__name__
 
-            for filter_func, handler in self._exception_handlers:
-                if filter_func(exc):
-                    if not inspect.iscoroutinefunction(handler):
-                        return handler(self, request, exc)
-                    else:
-                        return await handler(self, request, exc)
-
-            raise exc
+            return await self.handle_exception(request, exc)

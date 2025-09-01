@@ -28,3 +28,11 @@ class ClientHoldStorageTools:
             >>> client.reset_storage_hold()
         """
         client_holds_storage.reset_hold(self)
+
+    def remove_from_storage_hold(self: "TelegramClient"):
+        """Удаляет клиента из хранилища блокировок.
+
+        Example:
+            >>> client.remove_from_storage_hold()
+        """
+        client_holds_storage.remove_client(self)

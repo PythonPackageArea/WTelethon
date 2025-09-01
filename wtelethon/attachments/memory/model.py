@@ -118,6 +118,12 @@ class MemoryAttachment(
     def __setattr__(self, item: str, value: any) -> None:
         return object.__setattr__(self, item, value)
 
+    def __iadd__(self, other: "MemoryAttachment") -> "MemoryAttachment":
+        for key, value in other.__dict__.items():
+            if key in self.__dict__:
+                self.__setattr__(key, value)
+        return self
+
     def _to_ts(self, value: datetime.datetime | None):
         return int(value.timestamp()) if value else None
 
@@ -129,7 +135,7 @@ class MemoryAttachment(
         # %z даёт +0300 без двоеточия
         return value.strftime("%Y-%m-%dT%H:%M:%S%z")
 
-    def fill_json(self, json_attachment: "JsonAttachment") -> bool:  # type: ignore
+    def fill_json(self, json_attachment: "JsonAttachment") -> int:  # type: ignore
         """Заполняет `JsonAttachment` данными из памяти."""
         data = {
             # базовые
@@ -192,7 +198,7 @@ class MemoryAttachment(
         if "freeze" in clean_data and clean_data["freeze"] is None:
             del clean_data["freeze"]
         json_attachment.data.update(clean_data)
-        return True
+        return len(clean_data)
 
     def update(self, data: dict) -> bool:
         """Обновляет поля объекта из словаря."""

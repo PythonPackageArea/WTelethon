@@ -51,11 +51,23 @@ def set_telethon_logging(
 
     if mode == "off":
         logger.disabled = True
+        logger.setLevel(logging.CRITICAL + 1)
+        for child_name in list(logging.Logger.manager.loggerDict.keys()):
+            if child_name.startswith("telethon."):
+                child_logger = logging.getLogger(child_name)
+                child_logger.disabled = True
+                child_logger.setLevel(logging.CRITICAL + 1)
+
         if previous_handler and previous_handler in logger.handlers:
             logger.removeHandler(previous_handler)
         return None
 
     logger.disabled = False
+    logger.setLevel(logging.DEBUG)
+    for child_name in list(logging.Logger.manager.loggerDict.keys()):
+        if child_name.startswith("telethon."):
+            child_logger = logging.getLogger(child_name)
+            child_logger.disabled = False
 
     if previous_handler and previous_handler in logger.handlers:
         logger.removeHandler(previous_handler)

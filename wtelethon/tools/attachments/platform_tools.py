@@ -57,7 +57,7 @@ class PlatformAttachmentTools:
         self.memory.lang_pack = lang_pack
 
     def update_client_platform(
-        self: "TelegramClient", platform: PlatformData
+        self: "TelegramClient", platform: PlatformData, reinit: bool = True
     ) -> "TelegramClient":
         """Применяет параметры выбранной платформы и переинициализирует клиент.
 
@@ -84,9 +84,11 @@ class PlatformAttachmentTools:
         self.memory.app_version = data.get("app_version")
         self.memory.lang_code = data.get("lang_code")
         self.memory.system_lang_code = data.get("system_lang_code")
-        self._super_init()
 
-        self.update_client_lang_pack(data.get("lang_pack") or "")
-        self.update_client_params(data.get("params"))
+        self.memory.lang_pack = data.get("lang_pack") or ""
+        self._init_params = self._init_params or data.get("params")
+
+        if reinit:
+            self._super_init()
 
         return self

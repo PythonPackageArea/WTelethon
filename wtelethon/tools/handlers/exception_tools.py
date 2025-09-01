@@ -1,6 +1,6 @@
 import inspect
 
-from typing import Callable, TYPE_CHECKING, Any
+from typing import Awaitable, Callable, TYPE_CHECKING, Any, Union
 
 from telethon.tl.tlobject import TLRequest
 
@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 
 
 ExceptionFilterType = Callable[[Exception], bool]
-ExceptionHandlerType = Callable[["TelegramClient", TLRequest, Exception], Any]
+ExceptionHandlerType = Callable[
+    ["TelegramClient", Union[TLRequest, Awaitable], Exception], Any
+]
 
 
 class ExceptionHandlerTools:
@@ -18,8 +20,36 @@ class ExceptionHandlerTools:
 
     _exception_handlers: list[tuple[ExceptionFilterType, ExceptionHandlerType]]
 
+    async def handle_exception(
+        self: "TelegramClient",
+        request: Union[TLRequest, Awaitable],
+        exception: Exception,
+    ):
+        """Обрабатывает исключение.
+
+        Args:
+            request: Запрос.
+            exception: Исключение.
+        """
+        for filter_func, handler in self._exception_handlers:
+            if filter_func(exception):
+                if not inspect.iscoroutinefunction(handler):
+                    handler(self, request, exception)
+                else:
+                    await handler(self, request, exception)
+
+                print(request, type(request))
+                if isinstance(request, TLRequest):
+                    return await self(request)
+                else:
+                    return await request
+
+        raise exception
+
     def add_exception_handler(
-        self, filter_func: ExceptionFilterType, handler: ExceptionHandlerType
+        self: "TelegramClient",
+        filter_func: ExceptionFilterType,
+        handler: ExceptionHandlerType,
     ):
         """Добавляет обработчик исключений.
 
@@ -46,7 +76,9 @@ class ExceptionHandlerTools:
         self._exception_handlers.append((filter_func, handler))
 
     def remove_exception_handler(
-        self, filter_func: ExceptionFilterType, handler: ExceptionHandlerType
+        self: "TelegramClient",
+        filter_func: ExceptionFilterType,
+        handler: ExceptionHandlerType,
     ):
         """Удаляет обработчик исключений.
 

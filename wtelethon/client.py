@@ -5,7 +5,7 @@ from telethon import TelegramClient as TC
 from telethon.network import ConnectionTcpFull
 from telethon.sessions import MemorySession, SQLiteSession, StringSession
 
-from wtelethon import tl_types
+from wtelethon import tl_types, utils
 from wtelethon.attachments import MemoryAttachment, JsonAttachment
 from wtelethon.attachments.platform.model import PlatformData
 from wtelethon.tools.client.account import (
@@ -69,13 +69,13 @@ class TelegramClient(
     """Телеграм-клиент с расширенными возможностями."""
 
     session: SessionType
-
     __kwargs__: dict
 
     def __init__(
         self,
         session: Union[str, SessionType],
         *,
+        dc_id: Optional[int] = None,
         json_path: Optional[str] = None,
         json_attachment: Optional[JsonAttachment] = None,
         memory_attachment: Optional[MemoryAttachment] = None,
@@ -98,18 +98,6 @@ class TelegramClient(
     ):
         """Инициализирует клиент и применяет вложения."""
 
-        self._exception_handlers = []
-        self._init_params = init_params
-
-        if isinstance(session, str):
-            sqlite_session = SQLiteSession(session)
-
-            session = StringSession()
-            session.auth_key = sqlite_session.auth_key
-            session.set_dc(
-                sqlite_session.dc_id, sqlite_session.server_address, sqlite_session.port
-            )
-
         self.__kwargs__ = dict(
             session=session,
             timeout=timeout,
@@ -127,38 +115,58 @@ class TelegramClient(
             entity_cache_limit=entity_cache_limit,
         )
 
-        if memory_attachment:
-            self._memory = memory_attachment
-
-        if json_attachment:
-            self._json = json_attachment
-
-        if json_path:
-            self.init_json(json_path)
-
+        self._exception_handlers = []
+        self._init_params = init_params
         self.set_layer(layer)
 
-        if platform_data:
-            self.update_client_platform(platform_data)
+        if json_attachment is not None:
+            self._json = json_attachment
+            self.json.fill_memory(self.memory)
+
+        if memory_attachment is not None:
+            self.memory.__iadd__(memory_attachment)
+
+        if isinstance(session, str):
+            if session[0] == "1" and len(session) == 353:
+                self.__kwargs__.update(session=StringSession(session))
+
+            elif utils.is_hex(session) and len(session) == 512:
+                self.__kwargs__.update(
+                    session=self.load_auth_key_hex(session, dc_id=dc_id)
+                )
+
+            else:
+                self.memory.session_file = session
+                self.__kwargs__.update(session=self._sync_load_sqlite_session())
+
+        if dc_id is not None:
+            self.set_dc(dc_id)
+
+        if self.json is None and json_path:
+            self.init_json(json_path)
+            return
+
+        if platform_data is not None:
+            self.update_client_platform(platform_data, reinit=False)
 
         if self.json:
-            if not self.json.data:
-                return
-
-            self.json.fill_memory(self.memory)
+            self.memory.fill_json(self.json)
 
         self._super_init()
 
     def _super_init(self):
+        if self.json and self.json.loaded is False:
+            raise ValueError("json file is not loaded")
+
         """Вызывает родительский инициализатор с параметрами из памяти."""
         super().__init__(
             api_id=self.memory.api_id,
             api_hash=self.memory.api_hash,
-            device_model=self.memory.device_model or "Unknown",
-            system_version=self.memory.system_version or "1.0.0",
-            app_version=self.memory.app_version or self.__version__,
-            lang_code=self.memory.lang_code or "en",
-            system_lang_code=self.memory.system_lang_code or "en-US",
+            device_model=self.memory.device_model,
+            system_version=self.memory.system_version,
+            app_version=self.memory.app_version,
+            lang_code=self.memory.lang_code,
+            system_lang_code=self.memory.system_lang_code,
             **self.__kwargs__,
         )
         self.update_client_params(self._init_params)

@@ -10,6 +10,7 @@ from wtelethon.lib.metaclasses.singleton import _SingletonMeta
 
 _LIMIT_PROXY_ERRORS: int = 3
 _LIMIT_PROXY_ERRORS_TIME: int = 60 * 3
+_LIMIT_BEFORE_ERROR: int = 0.5
 
 
 class Proxy:
@@ -75,7 +76,7 @@ class Proxy:
         self.__password = password
         self.__network_type = network_type.upper()
         self.__last_used = time.time()
-        self.__last_error = []
+        self.__last_errors = []
 
     def client_format(
         self,
@@ -91,7 +92,7 @@ class Proxy:
             >>> # Можно использовать для настройки клиента
         """
         return (
-            python_socks.ProxyType(self.network_type),
+            python_socks.ProxyType[self.network_type],
             self.host,
             self.port,
             self.username and self.password,
@@ -106,7 +107,9 @@ class Proxy:
     def clear_errors(self):
         """Очищает устаревшие ошибки прокси."""
         self.__last_errors = [
-            _ for _ in self.__last_errors if _ > time.time() - _LIMIT_PROXY_ERRORS_TIME
+            err
+            for err in self.__last_errors
+            if time.time() - err <= _LIMIT_PROXY_ERRORS_TIME
         ]
 
     def add_error(self):
@@ -173,8 +176,13 @@ class ProxyStorage(metaclass=_SingletonMeta):
     def _get_available_proxies(self) -> list[Proxy]:
         for proxy in self._proxies.values():
             proxy.clear_errors()
-            if len(proxy.last_errors) < _LIMIT_PROXY_ERRORS:
-                yield proxy
+            if proxy.last_errors and (
+                time.time() - proxy.last_errors[-1] < _LIMIT_BEFORE_ERROR
+                or len(proxy.last_errors) >= _LIMIT_PROXY_ERRORS
+            ):
+                continue
+
+            yield proxy
 
     def get_proxy(
         self, random_choice: bool = False, usage_index_choice: bool = True
@@ -218,7 +226,9 @@ class ProxyStorage(metaclass=_SingletonMeta):
 
         if usage_index_choice:
             proxy = next(
-                iter(sorted(available_proxies, key=lambda x: x.last_used, reverse=True))
+                iter(
+                    sorted(available_proxies, key=lambda x: x.last_used, reverse=False)
+                )
             )
 
         proxy.usage_update()

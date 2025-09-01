@@ -320,3 +320,8 @@ def match_lang_code_by_number(
                 return fallback
 
     return random.choice(lang_codes)
+
+
+def is_hex(string: str) -> bool:
+    """Проверяет, является ли строка шестнадцатеричным числом."""
+    return bool(re.match(r"^[0-9a-fA-F]+$", string))

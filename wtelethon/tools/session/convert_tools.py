@@ -23,17 +23,19 @@ if TYPE_CHECKING:
 class ConvertTools:
     """Инструменты для конвертации сессий между разными форматами."""
 
-    def _sync_convert_to_sqlite(
+    def _sync_create_sqlite_session(
         self: "TelegramClient",
         dir_path: str,
-        file_name: str,
-        change_client: bool = True,
+        filename: str,
     ) -> bool:
+        if self.memory.session_file and os.path.exists(self.memory.session_file):
+            return True
+
         if isinstance(self.session, SQLiteSession):
             return True
 
-        file_name = (
-            file_name
+        file_name = str(
+            filename
             or self.memory.phone
             or self.memory.session_file
             or self.memory.account_id
@@ -41,28 +43,28 @@ class ConvertTools:
         if not file_name:
             raise ValueError("file_name is required")
 
-        if not file_name.endswith(".session"):
-            file_name += ".session"
+        file_name = f"{file_name.strip('.session')}.session"
 
         utils.ensure_dir(dir_path)
-        session = SQLiteSession(os.path.join(dir_path, file_name))
-        session.auth_key = self.session.auth_key
+        session_file = os.path.join(dir_path, file_name)
+        session = SQLiteSession(session_file)
+
         session.set_dc(
             self.session.dc_id,
             self.session.server_address,
             self.session.port,
         )
+        session.auth_key = self.session.auth_key
+        session.close()
 
-        if change_client:
-            self.session = session
+        self.memory.session_file = session_file
 
         return True
 
-    async def convert_to_sqlite(
+    async def create_sqlite_session(
         self: "TelegramClient",
         dir_path: str,
-        file_name: str,
-        change_client: bool = True,
+        filename: str,
     ) -> bool:
         """Конвертирует сессию в SQLite формат.
 
@@ -82,49 +84,41 @@ class ConvertTools:
             >>> await client.convert_to_sqlite("./backup", "backup_session", False)
         """
         return await asyncio.to_thread(
-            self._sync_convert_to_sqlite,
+            self._sync_create_sqlite_session,
             dir_path=dir_path,
-            file_name=file_name,
-            change_client=change_client,
+            filename=filename,
         )
 
-    async def convert_from_sqlite(
+    def _sync_load_sqlite_session(
         self: "TelegramClient",
-        delete_sqlite_session: bool = True,
-        change_client: bool = True,
-    ) -> bool:
+    ) -> StringSession:
+        if not self.memory.session_file or not os.path.exists(self.memory.session_file):
+            raise ValueError("session file not found")
+
+        sqlite_session = SQLiteSession(self.memory.session_file)
+
+        self.session = StringSession()
+        self.set_dc(sqlite_session.dc_id)
+        self.set_auth_key(sqlite_session.auth_key)
+
+        return self.session
+
+    async def load_sqlite_session(
+        self: "TelegramClient",
+    ) -> StringSession:
         """Конвертирует SQLite сессию в StringSession (в памяти).
 
-        Args:
-            delete_sqlite_session: Если True, удаляет исходный .session файл.
-            change_client: Если True, заменяет текущую сессию клиента на StringSession.
 
         Returns:
             True если конвертация успешна.
 
         Example:
-            >>> # Конвертировать в память и удалить файл
-            >>> await client.convert_from_sqlite()
-            >>>
-            >>> # Конвертировать без удаления файла
-            >>> await client.convert_from_sqlite(delete_sqlite_session=False)
+            >>> # Загрузить SQLiteSession сессию, сохраняя как StringSession
+            >>> await client.load_sqlite_session()
         """
-        if not isinstance(self.session, SQLiteSession):
-            return True
-
-        session = StringSession()
-        session.auth_key = self.session.auth_key
-        session.set_dc(
-            self.session.dc_id, self.session.server_address, self.session.port
+        return await asyncio.to_thread(
+            self._sync_load_sqlite_session,
         )
-
-        if delete_sqlite_session:
-            self.session.delete()
-
-        if change_client:
-            self.session = session
-
-        return True
 
     def get_session_string(
         self: "TelegramClient",
@@ -152,20 +146,19 @@ class ConvertTools:
             >>> auth_key = client.get_auth_key_hex()
             >>> print(f"Auth key: {auth_key[:32]}...")
         """
+
         return codecs.encode(self.session.auth_key.key, encoding="hex").decode()
 
-    def convert_from_auth_key_hex(
+    def load_auth_key_hex(
         self: "TelegramClient",
         auth_key_hex: str,
         dc_id: int,
-        change_client: bool = True,
-    ) -> bool:
+    ) -> StringSession:
         """Создаёт сессию из hex-ключа авторизации.
 
         Args:
             auth_key_hex: Ключ авторизации в шестнадцатеричном формате.
             dc_id: ID дата-центра.
-            change_client: Если True, заменяет текущую сессию клиента.
 
         Returns:
             True если конвертация успешна.
@@ -173,13 +166,25 @@ class ConvertTools:
         Example:
             >>> # Восстановить сессию из hex-ключа
             >>> key = "a1b2c3d4e5f6..."
-            >>> client.convert_from_auth_key_hex(key, dc_id=2)
+            >>> client.load_auth_key_hex(key, dc_id=2)
         """
-        session = StringSession()
-        session.auth_key = AuthKey(codecs.decode(auth_key_hex, encoding="hex"))
-        session.set_dc(dc_id, utils.get_dc_address(dc_id), 443)
+        self.session = StringSession()
 
-        if change_client:
-            self.session = session
+        self.set_dc(dc_id)
+        self.set_auth_key(AuthKey(codecs.decode(auth_key_hex, encoding="hex")))
 
+        return self.session
+
+    def set_dc(
+        self: "TelegramClient",
+        dc_id: int,
+    ) -> bool:
+        self.session.set_dc(dc_id, utils.get_dc_address(dc_id), 443)
+        return True
+
+    def set_auth_key(
+        self: "TelegramClient",
+        auth_key: AuthKey,
+    ) -> bool:
+        self.session.auth_key = auth_key
         return True

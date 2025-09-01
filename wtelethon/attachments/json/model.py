@@ -13,10 +13,13 @@ class JsonAttachment:
 
     _data: dict
     _file_path: str
+    _loaded: bool = False
 
     def __init__(self, file_path: str, include_data: Optional[dict] = None):
-        if not file_path or not os.path.exists(file_path):
-            raise ValueError("file_path is not exists")
+        print(file_path, os.access(os.path.dirname(file_path), os.W_OK))
+
+        if not file_path or not os.access(os.path.dirname(file_path), os.W_OK):
+            raise ValueError("file_path is not a file")
 
         if include_data and isinstance(include_data, dict) is False:
             raise ValueError("include_data must be a dictionary")
@@ -67,16 +70,21 @@ class JsonAttachment:
             await self.save()
 
     def _sync_save(self) -> bool:
-        content = str(self)
+        content = self.__str__()
         with open(self._file_path, "w") as f:
             f.write(content)
 
+        self._loaded = True
         return True
 
     def _sync_load(self) -> bool:
+        if not self._file_path or not os.path.exists(self._file_path):
+            raise ValueError("file_path is not exists")
+
         with open(self._file_path, "r") as f:
             self._data = json.load(f)
 
+        self._loaded = True
         return True
 
     async def save(self) -> "JsonAttachment":

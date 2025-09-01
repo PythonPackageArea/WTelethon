@@ -6,7 +6,7 @@ import os
 import base64
 import struct
 import shutil
-from typing import Awaitable, Callable, Union, TYPE_CHECKING, Optional
+from typing import Awaitable, Callable, Union, TYPE_CHECKING, Optional, Literal
 
 from telethon._updates import session
 from telethon.client import UserMethods
@@ -22,32 +22,26 @@ if TYPE_CHECKING:
     from wtelethon import TelegramClient
 
 
+FILE_TYPES = Literal["session", "json"]
+
+
 class FileAttachmentsTools:
     """Инструменты для управления файлами сессий и JSON вложений."""
 
-    def __check_session_type(self: "TelegramClient") -> SQLiteSession:
-        if not isinstance(self.session, SQLiteSession):
-            raise ValueError("session is not a SQLiteSession")
-
-        return self.session
-
-    def __update_path(self: "TelegramClient", _type: str, path: str) -> None:
+    def __update_path(self: "TelegramClient", _type: FILE_TYPES, path: str) -> None:
         if _type == "session":
-            session = self.__check_session_type()
-            session.close()
-            session.filename = path
+            self.memory.session_file = path
 
-        elif _type == "json":
-            if self.json:
-                self.json._file_path = path
+        elif _type == "json" and self.json:
+            self.json._file_path = path
 
         else:
             raise ValueError(f"Invalid type: {_type}")
 
-    def __get_path(self: "TelegramClient", _type: str) -> str:
-        if _type == "session":
-            return self.__check_session_type().filename
-        elif _type == "json":
+    def __get_path(self: "TelegramClient", _type: FILE_TYPES) -> str:
+        if _type == "session" and self.memory.session_file:
+            return self.memory.session_file
+        elif _type == "json" and self.json:
             return self.json.file_path
         else:
             raise ValueError(f"Invalid type: {_type}")
@@ -58,7 +52,7 @@ class FileAttachmentsTools:
         return (
             _type
             for _type in ["session", "json"]
-            if (_type == "session" and session_enabled)
+            if (_type == "session" and session_enabled and self.memory.session_file)
             or (_type == "json" and json_enabled and self.json)
         )
 
