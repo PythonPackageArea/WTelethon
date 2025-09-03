@@ -16,8 +16,6 @@ class JsonAttachment:
     _loaded: bool = False
 
     def __init__(self, file_path: str, include_data: Optional[dict] = None):
-        print(file_path, os.access(os.path.dirname(file_path), os.W_OK))
-
         if not file_path or not os.access(os.path.dirname(file_path), os.W_OK):
             raise ValueError("file_path is not a file")
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 ExceptionFilterType = Callable[[Exception], bool]
 ExceptionHandlerType = Callable[
-    ["TelegramClient", TLRequest, Exception], Optional[TLRequest]
+    ["TelegramClient", Optional[TLRequest], Exception], Optional[TLRequest]
 ]
 
 
@@ -23,7 +23,7 @@ class ExceptionHandlerTools:
 
     async def handle_exception(
         self: "TelegramClient",
-        request: TLRequest,
+        request: Optional[TLRequest],
         exception: Exception,
     ):
         """Обрабатывает исключение."""
@@ -39,12 +39,11 @@ class ExceptionHandlerTools:
                 except Exception as exc:
                     traceback.print_exc()
 
-            print(111, coro, type(coro))
-
             if coro and isinstance(coro, TLRequest):
                 return await self(coro)
 
-        raise exception
+        if request:
+            raise exception
 
     def add_exception_handler(
         self: "TelegramClient",

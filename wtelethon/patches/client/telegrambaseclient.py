@@ -50,7 +50,7 @@ class TelegramBaseClient(TelethonBaseClientOriginal):
                 return
 
         except Exception as e:
-            return await self.handle_exception(self.connect(), e)
+            return await self.handle_exception(None, e)
 
         self.session.auth_key = self._sender.auth_key
         self.session.save()
@@ -110,7 +110,6 @@ class TelegramBaseClient(TelethonBaseClientOriginal):
         response = await self._sender.send(
             functions.InvokeWithLayerRequest(self.get_layer(), req)
         )
-        # print(99, response, type(response))
 
         if isinstance(response, Exception):
             raise response

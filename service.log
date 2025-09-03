@@ -1,0 +1,26 @@
+2025-09-03 10:54:13 | asyncio | DEBUG | __init__:64 | Using selector: KqueueSelector
+2025-09-03 10:54:13 | __main__ | INFO | main:19 | Запуск сервиса WTelethon
+2025-09-03 10:54:13 | __main__ | DEBUG | main:23 | Загрузка прокси из API
+2025-09-03 10:54:13 | __main__ | INFO | main:25 | Прокси успешно загружены
+2025-09-03 10:54:13 | __main__ | INFO | main:27 | Запуск основного цикла сервиса
+2025-09-03 10:54:13 | proccess | INFO | run_service:102 | Основной цикл сервиса запущен
+2025-09-03 10:54:13 | proccess | DEBUG | run_service:107 | Начало итерации #1
+2025-09-03 10:54:13 | proccess | DEBUG | get_client:36 | Запрос данных клиента из API
+2025-09-03 10:54:13 | api_mock | DEBUG | get_session_data:81 | Запрос данных сессии: example_session
+2025-09-03 10:54:13 | proccess | DEBUG | get_client:42 | Создание клиента для сессии example_session
+2025-09-03 10:54:13 | proccess | DEBUG | get_client:59 | Клиент подобран и настроен
+2025-09-03 10:54:13 | proccess | DEBUG | _process:73 | Установка прокси для клиента example_session
+2025-09-03 10:54:13 | proccess | WARNING | _process:76 | Не удалось установить прокси для example_session: No available proxies found
+2025-09-03 10:54:13 | proccess | DEBUG | run_service:114 | Окончание итерации #1, ожидание 1 сек
+2025-09-03 10:54:13 | api_mock | DEBUG | get_proxies:102 | Запрос списка прокси: 2 шт.
+2025-09-03 10:54:14 | proccess | DEBUG | run_service:107 | Начало итерации #2
+2025-09-03 10:54:14 | proccess | DEBUG | get_client:36 | Запрос данных клиента из API
+2025-09-03 10:54:14 | api_mock | DEBUG | get_session_data:81 | Запрос данных сессии: example_session
+2025-09-03 10:54:14 | proccess | DEBUG | get_client:42 | Создание клиента для сессии example_session
+2025-09-03 10:54:14 | proccess | DEBUG | get_client:59 | Клиент подобран и настроен
+2025-09-03 10:54:14 | proccess | DEBUG | _process:73 | Установка прокси для клиента example_session
+2025-09-03 10:54:14 | proccess | INFO | client_process:25 | Подключение клиента None через прокси 127.0.0.1:1080
+2025-09-03 10:54:20 | handlers | WARNING | connect_error_handler:24 | Ошибка подключения для None через 127.0.0.1:1080: Connection to Telegram failed 5 time(s)
+2025-09-03 10:54:20 | handlers | INFO | connect_error_handler:33 | Смена прокси для None: 127.0.0.1:1080 -> 127.0.0.1:9050
+2025-09-03 10:54:20 | api_mock | WARNING | update_proxy_data:94 | Обновление статуса прокси proxy_2: connect_error=True
+2025-09-03 10:54:20 | handlers | DEBUG | connect_error_handler:40 | Переподключение None через новый прокси
