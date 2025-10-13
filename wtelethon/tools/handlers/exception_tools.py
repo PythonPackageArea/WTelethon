@@ -32,10 +32,8 @@ class ExceptionHandlerTools:
             coro = handler(self, request, exception)
 
             if inspect.iscoroutinefunction(handler):
-                try:
-                    coro = await coro
-                except:
-                    raise exception
+                coro = await coro
+ 
 
             if coro and isinstance(coro, TLRequest):
                 return await self(coro)
