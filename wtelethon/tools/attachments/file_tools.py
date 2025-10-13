@@ -40,15 +40,13 @@ class FileAttachmentsTools:
 
     def __get_path(self: "TelegramClient", _type: FILE_TYPES) -> str:
         if _type == "session" and self.memory.session_file:
-            return self.memory.session_file
+            return os.path.join(self.memory.source_dir, self.memory.session_file)
         elif _type == "json" and self.json:
             return self.json.file_path
         else:
             raise ValueError(f"Invalid type: {_type}")
 
-    def __iter_file_types(
-        self: "TelegramClient", session_enabled: bool, json_enabled: bool
-    ) -> str:
+    def __iter_file_types(self: "TelegramClient", session_enabled: bool, json_enabled: bool) -> str:
         return (
             _type
             for _type in ["session", "json"]
@@ -68,9 +66,7 @@ class FileAttachmentsTools:
 
         for _type in self.__iter_file_types(session_enabled, json_enabled):
             current_path = self.__get_path(_type)
-            new_file_path = os.path.join(
-                new_dir_path, new_file_name or os.path.basename(current_path)
-            )
+            new_file_path = os.path.join(new_dir_path, new_file_name or os.path.basename(current_path))
 
             shutil.move(current_path, new_file_path)
             self.__update_path(_type, new_file_path)
@@ -89,9 +85,7 @@ class FileAttachmentsTools:
 
         for _type in self.__iter_file_types(session_enabled, json_enabled):
             current_path = self.__get_path(_type)
-            new_file_path = os.path.join(
-                new_dir_path, new_file_name or os.path.basename(current_path)
-            )
+            new_file_path = os.path.join(new_dir_path, new_file_name or os.path.basename(current_path))
 
             shutil.copy(current_path, new_file_path)
             self.__update_path(_type, new_file_path)

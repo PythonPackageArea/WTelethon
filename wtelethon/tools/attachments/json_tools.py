@@ -57,6 +57,8 @@ class JsonAttachmentTools:
             raise ValueError("json is not set")
 
         await self.json.load()
+        self.json.fill_memory(self.memory)
+
         await self.dump_json_info()
 
         if reinit:

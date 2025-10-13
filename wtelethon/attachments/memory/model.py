@@ -81,6 +81,7 @@ class NetworkFields:
 
 
 class FilesFields:
+    source_dir: Optional[str] = None
     session_file: Optional[str] = None
 
 

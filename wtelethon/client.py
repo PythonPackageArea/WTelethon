@@ -1,3 +1,4 @@
+import os
 from sqlite3 import Connection
 from typing import Optional, Union
 import typing
@@ -129,12 +130,11 @@ class TelegramClient(
                 self.__kwargs__.update(session=StringSession(session))
 
             elif utils.is_hex(session) and len(session) == 512:
-                self.__kwargs__.update(
-                    session=self.load_auth_key_hex(session, dc_id=dc_id)
-                )
+                self.__kwargs__.update(session=self.load_auth_key_hex(session, dc_id=dc_id))
 
             else:
-                self.memory.session_file = session
+                self.memory.source_dir = os.path.dirname(session)
+                self.memory.session_file = os.path.basename(session)
                 self.__kwargs__.update(session=self._sync_load_sqlite_session())
 
         if dc_id is not None:
