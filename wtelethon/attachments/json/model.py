@@ -148,7 +148,7 @@ class JsonAttachment:
         memory.has_profile_pic = bool(self.first("avatar", "has_profile_pic"))
         memory.date_of_birth = self.first("date_of_birth") or 0
         memory.gender = self.first("gender", "sex") or 0
-        memory.session_file = self.first("session_file", "session")
+
 
         # --- freeze
         freeze_data = getattr(self, "freeze", None)
