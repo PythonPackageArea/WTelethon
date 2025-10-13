@@ -67,7 +67,12 @@ class FileAttachmentsTools:
 
         for _type in self.__iter_file_types(session_enabled, json_enabled):
             current_path = self.__get_path(_type)
-            new_file_path = os.path.join(new_dir_path, new_file_name or os.path.basename(current_path))
+            suffix = f".{_type}"
+            file_name = new_file_name or os.path.basename(current_path)
+            if not file_name.endswith(suffix):
+                file_name = f"{file_name}{suffix}"
+
+            new_file_path = os.path.join(new_dir_path, file_name)
 
             shutil.move(current_path, new_file_path)
             self.__update_path(_type, new_file_path)
@@ -86,7 +91,12 @@ class FileAttachmentsTools:
 
         for _type in self.__iter_file_types(session_enabled, json_enabled):
             current_path = self.__get_path(_type)
-            new_file_path = os.path.join(new_dir_path, new_file_name or os.path.basename(current_path))
+            suffix = f".{_type}"
+            file_name = new_file_name or os.path.basename(current_path)
+            if not file_name.endswith(suffix):
+                file_name = f"{file_name}{suffix}"
+
+            new_file_path = os.path.join(new_dir_path, file_name)
 
             shutil.copy(current_path, new_file_path)
             self.__update_path(_type, new_file_path)
