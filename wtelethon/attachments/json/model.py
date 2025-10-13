@@ -134,14 +134,13 @@ class JsonAttachment:
         memory.app_version = self.first("app_version")
 
         # --- language
-        if "system_lang_pack" in self._data:
-            memory.system_lang_code = self.first("system_lang_pack")
-            memory.lang_code = self.first("lang_pack")
+        memory.system_lang_code = self.first("system_lang_pack", "system_lang_code")
+        memory.lang_code = self.first("lang_pack", "lang_code")
 
-        else:
-            memory.system_lang_code = self.first("system_lang_code")
-            memory.lang_code = self.first("lang_code")
+        if "system_lang_code" in self._data and "system_lang_pack" not in self._data:
             memory.lang_pack = self.first("lang_pack")
+  
+
 
         # --- account
         memory.first_name = self.first("first_name")
