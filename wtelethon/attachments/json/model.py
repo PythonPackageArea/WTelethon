@@ -134,9 +134,13 @@ class JsonAttachment:
         memory.app_version = self.first("app_version")
 
         # --- language
-        memory.lang_code = self.first("lang_code", "lang_pack")
-        memory.system_lang_code = self.first("system_lang_code", "system_lang_pack")
-        memory.lang_pack = self.first("lang_pack")
+        if "system_lang_code" in self._data:
+            memory.system_lang_code = self.first("system_lang_code")
+            memory.lang_pack = self.first("lang_pack")
+            memory.lang_code = self.first("lang_code")
+        else:
+            memory.system_lang_code = self.first("system_lang_pack")
+            memory.lang_code = self.first("lang_pack")
 
         # --- account
         memory.first_name = self.first("first_name")
@@ -165,9 +169,7 @@ class JsonAttachment:
         memory.invites_count = self.first("invites_count", "stats_invites_count") or 0
         memory.last_connect_date = self.to_dt(self.first("last_connect_date"))
         memory.last_check_time = self.first("last_check_time")
-        memory.session_created_date = self.to_dt(
-            self.first("session_created_date", "register_time")
-        )
+        memory.session_created_date = self.to_dt(self.first("session_created_date", "register_time"))
 
         # --- security
         memory.twofa = self.first("twofa", "twoFA", "tw0FA")
