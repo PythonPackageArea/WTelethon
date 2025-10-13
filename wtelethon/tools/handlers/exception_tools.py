@@ -11,9 +11,7 @@ if TYPE_CHECKING:
 
 
 ExceptionFilterType = Callable[[Exception], bool]
-ExceptionHandlerType = Callable[
-    ["TelegramClient", Optional[TLRequest], Exception], Optional[TLRequest]
-]
+ExceptionHandlerType = Callable[["TelegramClient", Optional[TLRequest], Exception], Optional[TLRequest]]
 
 
 class ExceptionHandlerTools:
@@ -37,7 +35,7 @@ class ExceptionHandlerTools:
                 try:
                     coro = await coro
                 except Exception as exc:
-                    traceback.print_exc()
+                    pass
 
             if coro and isinstance(coro, TLRequest):
                 return await self(coro)
