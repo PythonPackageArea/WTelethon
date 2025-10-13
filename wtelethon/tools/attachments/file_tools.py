@@ -30,7 +30,8 @@ class FileAttachmentsTools:
 
     def __update_path(self: "TelegramClient", _type: FILE_TYPES, path: str) -> None:
         if _type == "session":
-            self.memory.session_file = path
+            self.memory.source_dir = os.path.dirname(path)
+            self.memory.session_file = os.path.basename(path)
 
         elif _type == "json" and self.json:
             self.json._file_path = path

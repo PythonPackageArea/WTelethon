@@ -28,26 +28,23 @@ class ConvertTools:
         dir_path: str,
         filename: str,
     ) -> bool:
-        if self.memory.session_file and os.path.exists(self.memory.session_file):
+        session_path = os.path.join(self.memory.source_dir, self.memory.session_file)
+
+        if self.memory.session_file and os.path.exists(session_path):
             return True
 
         if isinstance(self.session, SQLiteSession):
             return True
 
-        file_name = str(
-            filename
-            or self.memory.phone
-            or self.memory.session_file
-            or self.memory.account_id
-        )
+        file_name = str(filename or self.memory.phone or self.memory.session_file or self.memory.account_id)
         if not file_name:
             raise ValueError("file_name is required")
 
         file_name = f"{file_name.strip('.session')}.session"
 
         utils.ensure_dir(dir_path)
-        session_file = os.path.join(dir_path, file_name)
-        session = SQLiteSession(session_file)
+        session_path = os.path.join(dir_path, file_name)
+        session = SQLiteSession(session_path)
 
         session.set_dc(
             self.session.dc_id,
@@ -57,7 +54,8 @@ class ConvertTools:
         session.auth_key = self.session.auth_key
         session.close()
 
-        self.memory.session_file = session_file
+        self.memory.source_dir = dir_path
+        self.memory.session_file = file_name
 
         return True
 
@@ -92,10 +90,12 @@ class ConvertTools:
     def _sync_load_sqlite_session(
         self: "TelegramClient",
     ) -> StringSession:
-        if not self.memory.session_file or not os.path.exists(self.memory.session_file):
+        session_path = os.path.join(self.memory.source_dir, self.memory.session_file)
+
+        if not self.memory.session_file or not os.path.exists(session_path):
             raise ValueError("session file not found")
 
-        sqlite_session = SQLiteSession(self.memory.session_file)
+        sqlite_session = SQLiteSession(session_path)
 
         self.session = StringSession()
         self.set_dc(sqlite_session.dc_id)
