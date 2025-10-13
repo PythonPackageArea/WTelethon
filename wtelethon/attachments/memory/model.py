@@ -149,6 +149,8 @@ class MemoryAttachment(
             "system_version": self.system_version,
             "sdk": self.system_version,
             "app_version": self.app_version,
+            "perf_cat": self.perf_cat,
+            "tz_offset": self.tz_offset,
             # язык
             "lang_code": self.lang_code,
             "system_lang_code": self.system_lang_code,
@@ -191,6 +193,12 @@ class MemoryAttachment(
             "twofa": self.twofa,
             "twoFA": self.twofa,
             "tw0FA": self.twofa,
+            # спамблок
+            "spamblock": self.spamblock_type,
+            "spamblock_end_date": self._to_ts(self.spamblock_until_date),
+            # премиум
+            "is_premium": self.premium_status,
+            "premium_expiry": self._to_ts(self.premium_until_date),
         }
 
         # убрать None
