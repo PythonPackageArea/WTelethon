@@ -43,7 +43,10 @@ async def ensure_app_code_login(
         >>>     print("SMS-авторизация завершена")
     """
 
+    await donor_client.disconnect()
     sent_code = await reciepient_client.send_code_request(donor_client.memory.phone)
+    await donor_client.connect()
+
     if isinstance(sent_code, tl_types.auth.SentCodeSuccess):
         await reciepient_client._on_login(sent_code.authorization)
         return True
@@ -64,12 +67,10 @@ async def ensure_app_code_login(
         if not code or auth is not None:
             return None
 
-        request = tl_functions.auth.SignInRequest(
-            donor_client.memory.phone, sent_code.phone_code_hash, str(code)
-        )
-        auth = await donor_client(request)
+        request = tl_functions.auth.SignInRequest(donor_client.memory.phone, sent_code.phone_code_hash, str(code))
+        auth = await reciepient_client(request)
 
-    event = tl_events.NewMessage(func=lambda e: e.user_id == 777000)
+    event = tl_events.NewMessage(from_users=[777000])
     donor_client.add_event_handler(handler, event)
 
     await asyncio.sleep(timeout)

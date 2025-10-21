@@ -6,7 +6,7 @@ from telethon import TelegramClient as TC
 from telethon.network import ConnectionTcpFull
 from telethon.sessions import MemorySession, SQLiteSession, StringSession
 
-from wtelethon import tl_types, utils
+from wtelethon import tl_types, utils, models
 from wtelethon.attachments import MemoryAttachment, JsonAttachment
 from wtelethon.attachments.platform.model import PlatformData
 from wtelethon.tools.client.account import (
@@ -169,3 +169,6 @@ class TelegramClient(
         )
         self.update_client_params(self._init_params)
         self.update_client_lang_pack(self.memory.lang_pack)
+
+        if self.session.dc_id not in models.TGDC:
+            self.set_dc(2)
