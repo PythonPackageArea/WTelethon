@@ -70,16 +70,13 @@ class SMSAuthTools:
         """
         response = await self(
             tl_functions.auth.SendCodeRequest(
-                phone=phone,
+                phone_number=phone,
                 api_id=self.api_id,
                 api_hash=self.api_hash,
                 settings=settings,
             )
         )
-        if (
-            isinstance(response, tl_types.auth.SentCodeSuccess)
-            and auto_success_response_login
-        ):
-            await self._on_login(response.authorization)
+        if isinstance(response, tl_types.auth.SentCodeSuccess) and auto_success_response_login:
+            await self._on_login(response.authorization.user)
 
         return response

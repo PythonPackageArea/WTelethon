@@ -14,9 +14,7 @@ if TYPE_CHECKING:
 class WebAuthTools:
     """Инструменты для веб-авторизации клиента."""
 
-    async def accept_web_auth_request(
-        self: "TelegramClient", url: str = "https://web.telegram.org/k/"
-    ) -> Union[
+    async def accept_web_auth_request(self: "TelegramClient", url: str = "https://web.telegram.org/k/") -> Union[
         tl_types.UrlAuthResultRequest,
         tl_types.UrlAuthResultAccepted,
         tl_types.UrlAuthResultDefault,
@@ -39,9 +37,7 @@ class WebAuthTools:
         response = await self(tl_functions.messages.AcceptUrlAuthRequest(url=url))
         return response
 
-    async def accept_web_login_token(
-        self: "TelegramClient", token: str, dc_id: int
-    ) -> tl_types.Authorization:
+    async def accept_web_login_token(self: "TelegramClient", token: str, dc_id: int) -> tl_types.Authorization:
         """Принимает веб-токен для авторизации клиента.
 
         Переключается на указанный дата-центр и выполняет авторизацию
@@ -70,5 +66,5 @@ class WebAuthTools:
             )
         )
 
-        await self._on_login(auth)
+        await self._on_login(auth.user)
         return auth

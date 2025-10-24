@@ -35,3 +35,16 @@ class MTProtoSender(MTProtoSenderOriginal):
 
         if self._disconnected and not self._disconnected.done():
             self._disconnected.set_result(error if error else None)
+
+    async def _handle_ack(self, message):
+        """
+        Handles a server acknowledge about our messages. Normally
+        these can be ignored.
+
+        Since the ID of sent messages consisting of a container is
+        never returned (unless on a bad notification), this method
+        also removes containers messages when any of their inner
+        messages are acknowledged.
+        """
+        ack = message.obj
+        self._log.debug('Handling acknowledge for %s', str(ack.msg_ids))

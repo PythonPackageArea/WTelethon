@@ -11,5 +11,6 @@ patched = False
 if patched is False:
     tcpfull.FullPacketCodec.read_packet = tcpfull_patch.FullPacketCodec.read_packet
     mtprotosender.MTProtoSender._disconnect = mtprotosender_patch.MTProtoSender._disconnect
+    mtprotosender.MTProtoSender._handle_ack = mtprotosender_patch.MTProtoSender._handle_ack
     telegrambaseclient.TelegramBaseClient.connect = telegrambaseclient_patch.TelegramBaseClient.connect
     patched = True
