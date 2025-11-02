@@ -1,7 +1,8 @@
 import os
 from typing import Optional, Union, Type
 
-from telethon import TelegramClient as TC, Connection, ConnectionTcpFull
+from telethon import TelegramClient as TC
+from telethon.network import Connection, ConnectionTcpFull
 from telethon.sessions import MemorySession, SQLiteSession, StringSession
 
 from wtelethon import tl_types, utils, models
