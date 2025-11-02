@@ -1,3 +1,3 @@
 from . import proxies
 
-__ALL__ = ["proxies"]
+__all__ = ["proxies"]

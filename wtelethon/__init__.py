@@ -27,18 +27,18 @@ from wtelethon.storages import (
     proxy_storage,
 )
 
-__ALL__ = [
-    TelegramClient,
-    tl_types,
-    tl_functions,
-    tl_errors,
-    tl_events,
-    utils,
-    helpers,
-    client_holds_storage,
-    proxy_storage,
-    PlatformAttachment,
-    MemoryAttachment,
-    JsonAttachment,
-    __version__,
+__all__ = [
+    "TelegramClient",
+    "tl_types",
+    "tl_functions",
+    "tl_errors",
+    "tl_events",
+    "utils",
+    "helpers",
+    "client_holds_storage",
+    "proxy_storage",
+    "PlatformAttachment",
+    "MemoryAttachment",
+    "JsonAttachment",
+    "__version__",
 ]

@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
-
 from wtelethon import TelegramClient, JsonAttachment, MemoryAttachment, helpers
-
 from config import WRONG_FORMAT_DIR_PATH, API_ID, API_HASH, CONNECTION_RETRIES
 from logging_config import get_logger
 
@@ -10,54 +8,49 @@ logger = get_logger(__name__)
 
 
 async def process_lone_files(files: helpers.files.GlobResponse) -> None:
-    """Обработка файлов без пары (json без session или наоборот)"""
     if files.json_loners:
-        logger.warning(f"Найдены JSON файлы без session: {len(files.json_loners)}")
-        logger.info("Эти файлы нужно очистить")
+        logger.warning(f"Found JSON files without session: {len(files.json_loners)}")
+        logger.info("These files need to be cleaned up")
 
-        response = input(f"Переместить их в папку '{WRONG_FORMAT_DIR_PATH}'? (y/n): ")
+        response = input(f"Move them to '{WRONG_FORMAT_DIR_PATH}'? (y/n): ")
         if response.lower() == "y":
             for filename, path in files.json_loners.items():
                 os.rename(path, WRONG_FORMAT_DIR_PATH / filename)
-            logger.info("Непарные JSON файлы перемещены")
+            logger.info("Unpaired JSON files moved")
 
     if files.session_loners:
-        logger.warning(f"Найдены session файлы без JSON: {len(files.session_loners)}")
-        logger.info("Можно создать для них JSON файлы")
+        logger.warning(f"Found session files without JSON: {len(files.session_loners)}")
+        logger.info("Can create JSON files for them")
 
-        response = input("Создать JSON файлы? (y/n): ")
+        response = input("Create JSON files? (y/n): ")
         if response.lower() == "y":
             for filename, path in files.session_loners.items():
                 json_path = str(path).replace(".session", ".json")
-                json_attachment = await JsonAttachment(json_path)
 
-                memory_attachment = MemoryAttachment(
-                    api_id=API_ID,
-                    api_hash=API_HASH,
-                )
-                memory_attachment.fill_json(json_attachment)
+                json_dir = os.path.dirname(json_path)
+                os.makedirs(json_dir, exist_ok=True)
+
+                json_attachment = JsonAttachment(json_path, include_data={"api_id": API_ID, "api_hash": API_HASH})
+
                 await json_attachment.save()
-                logger.info(f"Создан JSON для {filename}")
+                logger.info(f"Created JSON for {filename}")
         else:
-            response2 = input(f"Переместить в папку '{WRONG_FORMAT_DIR_PATH}'? (y/n): ")
+            response2 = input(f"Move to '{WRONG_FORMAT_DIR_PATH}'? (y/n): ")
             if response2.lower() == "y":
                 for filename, path in files.session_loners.items():
                     os.rename(path, WRONG_FORMAT_DIR_PATH / filename)
-                logger.info("Непарные session файлы перемещены")
+                logger.info("Unpaired session files moved")
 
 
 async def load_clients(dir_path: Path) -> list[TelegramClient]:
-    """Загрузка клиентов из директории"""
     files = helpers.files.glob_files(dir_path)
     clients = []
 
     if not files.items():
-        logger.warning("Не найдено ни одной пары session+json файлов")
+        logger.warning("No session+json file pairs found")
 
-    # Обработка непарных файлов
     await process_lone_files(files)
 
-    # Загрузка клиентов
     for session_name, item in files.items():
         try:
             client = TelegramClient(
@@ -66,8 +59,8 @@ async def load_clients(dir_path: Path) -> list[TelegramClient]:
                 connection_retries=CONNECTION_RETRIES,
             )
             clients.append(client)
-            logger.info(f"Клиент загружен: {session_name}")
-        except Exception as e:
-            logger.error(f"Ошибка загрузки {session_name}: {e}")
+            logger.info(f"Client loaded: {session_name}")
+        except Exception as exc:
+            logger.error(f"Error loading {session_name}: {exc}")
 
     return clients

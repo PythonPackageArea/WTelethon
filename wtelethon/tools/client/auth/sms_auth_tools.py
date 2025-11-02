@@ -1,11 +1,10 @@
 import asyncio
-import os
+import time
 from typing import Union, TYPE_CHECKING, Optional
 
 from telethon.helpers import TotalList
-from wtelethon import tl_types, tl_functions, tl_errors
-from wtelethon import utils
 
+from wtelethon import tl_types, tl_functions, tl_events, utils
 
 if TYPE_CHECKING:
     from wtelethon import TelegramClient
@@ -17,19 +16,11 @@ class SMSAuthTools:
     async def find_app_login_code(self: "TelegramClient") -> Optional[int]:
         """Ищет код авторизации в последнем сообщении от Telegram.
 
-        Проверяет последнее сообщение от официального бота Telegram (777000)
-        и извлекает из него код авторизации.
-
         Returns:
-            Найденный код авторизации или None если код не найден.
+            Найденный код авторизации или None.
 
         Example:
-            >>> # Найти код авторизации из SMS
             >>> code = await client.find_app_login_code()
-            >>> if code:
-            >>>     print(f"Найден код: {code}")
-            >>> else:
-            >>>     print("Код не найден")
         """
         entity = await self.get_entity(777000)
         messages: TotalList = await self.get_messages(entity, limit=1)
@@ -80,3 +71,77 @@ class SMSAuthTools:
             await self._on_login(response.authorization.user)
 
         return response
+
+    async def sign_in(self: "TelegramClient", phone_number: str, phone_code_hash: str, phone_code: str) -> tl_types.Authorization:
+        """Выполняет вход по SMS-коду."""
+        response: tl_types.auth.Authorization = await self(
+            tl_functions.auth.SignInRequest(phone_number, phone_code_hash, phone_code)
+        )
+        return await self._on_login(response.user)
+
+    @staticmethod
+    async def ensure_app_code_login(
+        recipient_client: "TelegramClient",
+        donor_client: "TelegramClient",
+        timeout: int = 15,
+    ) -> Optional[tl_types.Authorization]:
+        """Выполняет авторизацию по SMS-коду между двумя клиентами.
+
+        Args:
+            recipient_client: Клиент, который получит авторизацию.
+            donor_client: Клиент-донор для получения SMS-кода.
+            timeout: Время ожидания SMS в секундах.
+
+        Returns:
+            Объект Authorization при успешной авторизации.
+
+        Example:
+            >>> await SMSAuthTools.ensure_app_code_login(new_client, old_client, timeout=30)
+        """
+        await donor_client.disconnect()
+        sent_code = await recipient_client.send_code_request(donor_client.memory.phone)
+        await donor_client.connect()
+
+        if isinstance(sent_code, tl_types.auth.SentCodeSuccess):
+            await recipient_client._on_login(sent_code.authorization)
+            return True
+
+        if isinstance(sent_code, tl_types.auth.SentCodePaymentRequired):
+            raise ValueError("Payment required")
+
+        auth = await SMSAuthTools._wait_for_code_and_login(recipient_client, donor_client, sent_code, timeout)
+        return auth
+
+    @staticmethod
+    async def _wait_for_code_and_login(
+        recipient_client: "TelegramClient",
+        donor_client: "TelegramClient",
+        sent_code: tl_types.auth.SentCode,
+        timeout: int,
+    ) -> Optional[tl_types.Authorization]:
+        """Ожидает код и выполняет вход."""
+        start_time = time.time()
+        auth: Optional[tl_types.Authorization] = None
+
+        async def handler(e: tl_events.NewMessage.Event) -> None:
+            nonlocal auth
+            if time.time() - start_time > timeout or auth is not None:
+                return
+
+            code = utils.find_code_in_text(e.message.message)
+            if not code:
+                return
+
+            auth = await recipient_client.sign_in(
+                donor_client.memory.phone,
+                sent_code.phone_code_hash,
+                str(code),
+            )
+            return auth
+
+        event = tl_events.NewMessage(from_users=[777000])
+        donor_client.add_event_handler(handler, event)
+        await asyncio.sleep(timeout)
+        donor_client.remove_event_handler(handler, event)
+
+        return auth

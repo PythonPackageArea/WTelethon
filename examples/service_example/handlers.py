@@ -1,29 +1,24 @@
+from typing import Union, Awaitable, Any
 import contextlib
-from typing import Union, Awaitable
-
-from telethon.tl import TLRequest
-
 from wtelethon import TelegramClient
-
+from telethon.tl.tlobject import TLRequest
 from api_mock import ApiMock
 from logging_config import get_logger
 
-api_mock = ApiMock()
 logger = get_logger(__name__)
+api_mock = ApiMock()
 
 
 async def connect_error_handler(
     client: TelegramClient,
-    request: Union[TLRequest, Awaitable],
+    request: Union[TLRequest, Awaitable[Any]],
     exception: ConnectionError,
 ) -> Union[TLRequest, Awaitable]:
     """Обработчик ошибок подключения с заменой прокси"""
     session_name = client.memory.session_file
     old_proxy = f"{client.current_proxy.host}:{client.current_proxy.port}"
 
-    logger.warning(
-        f"Ошибка подключения для {session_name} через {old_proxy}: {exception}"
-    )
+    logger.warning(f"Ошибка подключения для {session_name} через {old_proxy}: {exception}")
 
     with contextlib.suppress(Exception):
         client.proxy_error()

@@ -22,9 +22,7 @@ def set_telethon_log_level(level: int | str) -> None:
     logger.setLevel(level)
 
 
-def set_telethon_logging(
-    mode: str = "simple", previous_handler: Optional[logging.Handler] = None
-) -> Optional[logging.Handler]:
+def set_telethon_logging(mode: str = "simple", previous_handler: Optional[logging.Handler] = None) -> Optional[logging.Handler]:
     """Настраивает режим логирования для Telethon.
 
     Args:

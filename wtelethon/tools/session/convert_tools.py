@@ -1,20 +1,12 @@
 import asyncio
 import codecs
-import datetime
-import inspect
 import os
-import base64
-import struct
-from typing import Awaitable, Callable, Union, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
-from telethon.client import UserMethods
 from telethon.crypto import AuthKey
-from telethon.helpers import TotalList
-from telethon.tl import TLRequest
-from wtelethon import tl_types, tl_functions, tl_errors
-from wtelethon import utils, helpers
+from telethon.sessions import SQLiteSession, StringSession
 
-from telethon.sessions import SQLiteSession, StringSession, MemorySession
+from wtelethon import utils, helpers
 
 if TYPE_CHECKING:
     from wtelethon import TelegramClient
@@ -188,3 +180,62 @@ class ConvertTools:
     ) -> bool:
         self.session.auth_key = auth_key
         return True
+
+    def create_tdata(
+        self: "TelegramClient",
+        tdata_output_path: str,
+        passcode: str = "",
+    ) -> bool:
+        """Создает TData из текущей сессии клиента.
+
+        Args:
+            tdata_output_path: Путь для сохранения TData.
+            passcode: Пароль для TData (опционально).
+
+        Returns:
+            True если создание прошло успешно.
+
+        Example:
+            >>> success = client.create_tdata("./new_tdata")
+        """
+        if not self.session.auth_key or not self.session.dc_id:
+            raise ValueError("Client session is not authorized")
+
+        utils.ensure_dir(tdata_output_path)
+
+        return helpers.tdata._create_tdata_files(tdata_output_path, [(self.session.dc_id, self.session.auth_key.key)], passcode)
+
+    @staticmethod
+    def create_tdata_from_clients(
+        clients: List["TelegramClient"],
+        tdata_output_path: str,
+        passcode: str = "",
+        active_index: int = 0,
+    ) -> bool:
+        """Создает TData из нескольких клиентов.
+
+        Args:
+            clients: Список клиентов для добавления в TData.
+            tdata_output_path: Путь для сохранения TData.
+            passcode: Пароль для TData (опционально).
+            active_index: Индекс активного аккаунта.
+
+        Returns:
+            True если создание прошло успешно.
+
+        Example:
+            >>> clients = [client1, client2, client3]
+            >>> success = ConvertTools.create_tdata_from_clients(clients, "./multi_tdata")
+        """
+        if not clients:
+            raise ValueError("At least one client is required")
+
+        accounts = []
+        for client in clients:
+            if not client.session.auth_key or not client.session.dc_id:
+                raise ValueError("Client session is not authorized")
+            accounts.append((client.session.dc_id, client.session.auth_key.key))
+
+        utils.ensure_dir(tdata_output_path)
+
+        return helpers.tdata._create_tdata_files(tdata_output_path, accounts, passcode, active_index)

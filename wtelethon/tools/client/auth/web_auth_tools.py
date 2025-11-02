@@ -1,11 +1,6 @@
-import asyncio
-import os
-from typing import Union, TYPE_CHECKING, Optional
+from typing import Union, TYPE_CHECKING
 
-from telethon.helpers import TotalList
-from wtelethon import tl_types, tl_functions, tl_errors
-from wtelethon import utils
-
+from wtelethon import tl_types, tl_functions, utils
 
 if TYPE_CHECKING:
     from wtelethon import TelegramClient
@@ -22,17 +17,13 @@ class WebAuthTools:
         """Принимает запрос веб-авторизации для указанного URL.
 
         Args:
-            url: URL веб-приложения Telegram (по умолчанию Telegram Web K).
+            url: URL веб-приложения Telegram.
 
         Returns:
-            Результат веб-авторизации - запрос, принятие или значение по умолчанию.
+            Результат веб-авторизации.
 
         Example:
-            >>> # Принять авторизацию для Telegram Web
             >>> result = await client.accept_web_auth_request()
-            >>>
-            >>> if isinstance(result, tl_types.UrlAuthResultAccepted):
-            >>>     print(f"Авторизация принята: {result.url}")
         """
         response = await self(tl_functions.messages.AcceptUrlAuthRequest(url=url))
         return response
@@ -58,7 +49,7 @@ class WebAuthTools:
         """
         self.session.set_dc(dc_id, utils.get_dc_address(dc_id), 443)
 
-        auth = await self(
+        auth: tl_types.auth.Authorization = await self(
             tl_functions.auth.ImportWebTokenAuthorizationRequest(
                 web_auth_token=token,
                 api_id=self.api_id,
@@ -68,3 +59,24 @@ class WebAuthTools:
 
         await self._on_login(auth.user)
         return auth
+
+    @staticmethod
+    async def ensure_web_login(recipient_client: "TelegramClient", donor_client: "TelegramClient") -> bool:
+        """Выполняет веб-авторизацию между двумя клиентами.
+
+        Args:
+            recipient_client: Клиент, который получит авторизацию.
+            donor_client: Клиент-донор с существующей авторизацией.
+
+        Returns:
+            True при успешной авторизации.
+
+        Example:
+            >>> await WebAuthTools.ensure_web_login(new_client, old_client)
+        """
+        url_auth_result = await donor_client.accept_web_auth_request()
+        if not isinstance(url_auth_result, tl_types.UrlAuthResultAccepted):
+            raise ValueError("Url auth result is not accepted")
+
+        await recipient_client.accept_web_login_token(*utils.parse_url_auth(url_auth_result.url))
+        return True

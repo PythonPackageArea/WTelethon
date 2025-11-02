@@ -18,19 +18,19 @@ async def connect_error_handler(
     """Обработчик ошибок подключения с заменой прокси"""
     session_name = client.memory.session_file
 
-    logger.warning(f"Проблемы с интернетом у {session_name}, меняю прокси...")
+    logger.warning(f"Internet problems with {session_name}, changing proxy...")
 
     with contextlib.suppress(Exception):
         client.proxy_error()
         client.set_proxy_from_storage()
 
-        logger.info(f"Новый прокси установлен для {session_name}")
+        logger.info(f"New proxy set for {session_name}")
 
         await client.disconnect()
         await client.connect()
 
-        logger.info(f"Аккаунт {session_name} переподключен успешно")
+        logger.info(f"Account {session_name} reconnected successfully")
         return request
 
-    logger.warning(f"Не удалось переподключить {session_name}")
+    logger.warning(f"Failed to reconnect {session_name}")
     raise exception

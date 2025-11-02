@@ -1,9 +1,7 @@
 import os
-from sqlite3 import Connection
-from typing import Optional, Union
-import typing
-from telethon import TelegramClient as TC
-from telethon.network import ConnectionTcpFull
+from typing import Optional, Union, Type
+
+from telethon import TelegramClient as TC, Connection, ConnectionTcpFull
 from telethon.sessions import MemorySession, SQLiteSession, StringSession
 
 from wtelethon import tl_types, utils, models
@@ -23,14 +21,12 @@ from wtelethon.tools.client.auth import (
     WebAuthTools,
     SignUpTools,
 )
-
 from wtelethon.tools.attachments import (
     FileAttachmentsTools,
     JsonAttachmentTools,
     MemoryAttachmentTools,
     PlatformAttachmentTools,
 )
-
 from wtelethon.tools.storages import (
     ProxyStorageTools,
     ClientHoldStorageTools,
@@ -38,9 +34,6 @@ from wtelethon.tools.storages import (
 from wtelethon.tools.client.internal_tools import InternalTools
 from wtelethon.tools.handlers.exception_tools import ExceptionHandlerTools
 from wtelethon.tools.session.convert_tools import ConvertTools
-
-from telethon.tl import alltlobjects
-from telethon.network import MTProtoSender, Connection, ConnectionTcpFull, TcpMTProxy
 
 SessionType = Union[MemorySession, SQLiteSession, StringSession]
 
@@ -86,8 +79,8 @@ class TelegramClient(
         request_retries: int = 5,
         connection_retries: int = 5,
         flood_sleep_threshold: int = 60,
-        connection: "typing.Type[Connection]" = ConnectionTcpFull,
-        proxy: typing.Union[tuple, dict] = None,
+        connection: Type[Connection] = ConnectionTcpFull,
+        proxy: Union[tuple, dict] = None,
         retry_delay: int = 1,
         auto_reconnect: bool = True,
         sequential_updates: bool = False,
