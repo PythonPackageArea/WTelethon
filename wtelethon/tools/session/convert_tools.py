@@ -20,10 +20,10 @@ class ConvertTools:
         dir_path: str,
         filename: str,
     ) -> bool:
-        session_path = os.path.join(self.memory.source_dir, self.memory.session_file)
-
-        if self.memory.session_file and os.path.exists(session_path):
-            return True
+        if self.memory.source_dir and self.memory.session_file:
+            session_path = os.path.join(self.memory.source_dir, self.memory.session_file)
+            if os.path.exists(session_path):
+                return True
 
         if isinstance(self.session, SQLiteSession):
             return True
