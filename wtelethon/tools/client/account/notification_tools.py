@@ -50,7 +50,7 @@ class AccountNotificationTools:
 
     async def register_voip_token(
         self: "TelegramClient",
-        token: str,
+        token: Optional[str] = None,
         other_uids: Optional[list[int]] = None,
         app_sandbox: Optional[bool] = None,
         secret: Optional[bytes] = None,
@@ -75,6 +75,9 @@ class AccountNotificationTools:
         """
 
         token = token or self.memory.voip_token
+        if token is None:
+            raise ValueError("VoIP token is not found")
+
         token_type = token_type or utils.get_voip_token_type(self.api_id)
 
         if token_type is None:
@@ -83,13 +86,11 @@ class AccountNotificationTools:
         self.memory.voip_token = token
         self.memory.voip_token_type = token_type
 
-        return await self.register_push_token(
-            token, other_uids, app_sandbox, secret, token_type
-        )
+        return await self.register_push_token(token, other_uids, app_sandbox, secret, token_type)
 
     async def register_push_token(
         self: "TelegramClient",
-        token: str,
+        token: Optional[str] = None,
         other_uids: Optional[list[int]] = None,
         app_sandbox: Optional[bool] = None,
         secret: Optional[bytes] = None,
@@ -114,6 +115,9 @@ class AccountNotificationTools:
         """
 
         token = token or self.memory.push_token
+        if token is None:
+            raise ValueError("Push token is not found")
+
         token_type = token_type or utils.get_push_token_type(self.api_id)
 
         if token_type is None:
@@ -122,6 +126,4 @@ class AccountNotificationTools:
         self.memory.push_token = token
         self.memory.push_token_type = token_type
 
-        return await self.register_device(
-            token, token_type, other_uids, app_sandbox, secret
-        )
+        return await self.register_device(token, token_type, other_uids, app_sandbox, secret)
