@@ -111,7 +111,6 @@ class PlatformData:
                 continue
 
             if value is not None:
-                print(key, value, type(value))
                 if isinstance(value, (str, int)):
                     setattr(self, key, value)
                     continue
