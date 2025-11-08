@@ -45,11 +45,7 @@ def get_push_token_type(api_id: int) -> Optional[int]:
         >>> print(f"Push token type: {token_type}")  # 1
     """
     return next(
-        (
-            token_type
-            for token_type, api_ids in models.API_IDS_BY_PUSH_TOKEN_TYPE.items()
-            if api_id in api_ids
-        ),
+        (token_type for token_type, api_ids in models.API_IDS_BY_PUSH_TOKEN_TYPE.items() if api_id in api_ids),
         None,
     )
 
@@ -68,11 +64,7 @@ def get_voip_token_type(api_id: int) -> Optional[int]:
         >>> print(f"VoIP token type: {voip_type}")  # 9
     """
     return next(
-        (
-            token_type
-            for token_type, api_ids in models.API_IDS_BY_VOIP_TOKEN_TYPE.items()
-            if api_id in api_ids
-        ),
+        (token_type for token_type, api_ids in models.API_IDS_BY_VOIP_TOKEN_TYPE.items() if api_id in api_ids),
         None,
     )
 
@@ -99,9 +91,7 @@ def find_code_in_text(text: str) -> Optional[str]:
         return text[start_index + 2 : start_index + 7]
 
 
-def extract_datetime_from_text(
-    text, date_pattern: str = r"\b(\d{2})\.(\d{2})\.(\d{4})\b"
-) -> Optional[datetime.datetime]:
+def extract_datetime_from_text(text, date_pattern: str = r"\b(\d{2})\.(\d{2})\.(\d{4})\b") -> Optional[datetime.datetime]:
     """Извлекает дату из текста с помощью регулярного выражения.
 
     Args:
@@ -177,6 +167,20 @@ def is_recaptcha_error(exc: Exception) -> bool:
         >>>         print("Требуется решить капчу")
     """
     return isinstance(exc, tl_errors.ForbiddenError) and "RECAPTCHA_CHECK_" in str(exc)
+
+
+def parse_recaptcha_error(exc: tl_errors.ForbiddenError) -> tuple[str, str]:
+    """
+    Извлекает параметры рекапчи из ошибки.
+
+    Args:
+        exc: Исключение для проверки. (Пример: telethon.errors.rpcbaseerrors.ForbiddenError: RPCError 403: RECAPTCHA_CHECK_signup__6LfsY8EqAAAAAJ4jvMOeSyq6zRPYxnVR4HQDPIhm (caused by SendCodeRequest))
+
+    Returns:
+        Кортеж (app_action, app_key) из ошибки.
+    """
+    match = re.search(r"RECAPTCHA_CHECK_([^_]+)__(\S+)", str(exc))
+    return (match.group(1), match.group(2)) if match else None
 
 
 def parse_url_auth(url: str) -> tuple[str, int]:
@@ -294,9 +298,7 @@ def hex_to_base64(hex_string: str) -> str:
     return base64.b64encode(bytes.fromhex(hex_string)).decode()
 
 
-def match_lang_code_by_number(
-    phone_number: Optional[str], lang_codes: list[str]
-) -> str:
+def match_lang_code_by_number(phone_number: Optional[str], lang_codes: list[str]) -> str:
     if not phone_number or not (phone_number := str(phone_number)):
         return random.choice(lang_codes)
 
