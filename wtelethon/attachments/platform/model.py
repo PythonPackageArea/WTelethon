@@ -18,8 +18,7 @@ class PlatformData:
     api_id: int
     api_hash: str
 
-    device_models: set[str]
-    system_versions: set[str]
+    system_versions_by_device_models: dict[str, set[str]]
 
     app_versions_by_layer: dict[int, set[str]]
 
@@ -30,8 +29,7 @@ class PlatformData:
     params_callback: Optional[Callable[["TelegramClient"], JsonObject]] = None
 
     def __init__(self):
-        self.device_models = set()
-        self.system_versions = set()
+        self.system_versions_by_device_models = dict()
         self.app_versions_by_layer = dict()
         self.lang_codes = set()
         self.system_lang_codes = set()
@@ -64,18 +62,23 @@ class PlatformData:
         if not app_versions:
             raise ValueError(f"No app versions for layer {layer}")
 
-        lang_code = utils.match_lang_code_by_number(
-            client.memory.phone, list(self.lang_codes)
-        )
-        system_lang_codes = [
-            code for code in self.system_lang_codes if code.startswith(lang_code)
-        ]
+        if not self.system_versions_by_device_models:
+            raise ValueError("No device models configured")
+
+        device_model = random.choice(list(self.system_versions_by_device_models.keys()))
+        system_versions = self.system_versions_by_device_models[device_model]
+
+        if not system_versions:
+            raise ValueError(f"No system versions for device model {device_model}")
+
+        lang_code = utils.match_lang_code_by_number(client.memory.phone, list(self.lang_codes))
+        system_lang_codes = [code for code in self.system_lang_codes if code.startswith(lang_code)]
 
         return {
             "api_id": self.api_id,
             "api_hash": self.api_hash,
-            "device_model": random.choice(list(self.device_models)),
-            "system_version": random.choice(list(self.system_versions)),
+            "device_model": device_model,
+            "system_version": random.choice(list(system_versions)),
             "app_version": random.choice(list(app_versions)),
             "lang_code": lang_code,
             "system_lang_code": random.choice(system_lang_codes),
@@ -83,9 +86,7 @@ class PlatformData:
             "params": params,
         }
 
-    def set_params_callback(
-        self, callback: Callable[["TelegramClient"], JsonObject]
-    ) -> "PlatformData":
+    def set_params_callback(self, callback: Callable[["TelegramClient"], JsonObject]) -> "PlatformData":
         signature = inspect.signature(callback)
         if len(signature.parameters) != 1:
             raise ValueError("Callback must take exactly one argument")
@@ -97,8 +98,7 @@ class PlatformData:
         self,
         api_id: Optional[int] = None,
         api_hash: Optional[str] = None,
-        device_models: set[str] = None,
-        system_versions: set[str] = None,
+        system_versions_by_device_models: dict[str, set[str]] = None,
         app_versions_by_layer: dict[int, set[str]] = None,
         lang_codes: set[str] = None,
         system_lang_codes: set[str] = None,
