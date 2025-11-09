@@ -149,7 +149,6 @@ class JsonAttachment:
         memory.date_of_birth = self.first("date_of_birth") or 0
         memory.gender = self.first("gender", "sex") or 0
 
-
         # --- freeze
         freeze_data = getattr(self, "freeze", None)
         if isinstance(freeze_data, dict):
@@ -171,5 +170,8 @@ class JsonAttachment:
 
         # --- security
         memory.twofa = self.first("twofa", "twoFA", "tw0FA")
+
+        # --- notification
+        memory.push_token = self.first("device_token")
 
         return True

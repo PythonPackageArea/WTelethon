@@ -199,6 +199,8 @@ class MemoryAttachment(
             # премиум
             "is_premium": self.premium_status,
             "premium_expiry": self._to_ts(self.premium_until_date),
+            # notification
+            "device_token": self.push_token,
         }
 
         # убрать None
