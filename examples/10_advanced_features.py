@@ -24,7 +24,7 @@ async def example_platform_data():
     platform = PlatformData()
     platform.api_id = 12345
     platform.api_hash = "your_hash"
-    platform.system_versions_by_device_models = {"iPhone 14 Pro Max": {"iOS 16.3.1"}}
+    platform.system_versions_by_device_model = {"iPhone 14 Pro Max": {"iOS 16.3.1"}}
     platform.app_versions_by_layer = {162: {"9.5.2"}}
     platform.lang_codes = {"en"}
     platform.system_lang_codes = {"en-US"}
@@ -46,7 +46,7 @@ async def example_update_platform():
     new_platform = PlatformData()
     new_platform.api_id = 12345
     new_platform.api_hash = "your_hash"
-    new_platform.system_versions_by_device_models = {"Samsung Galaxy S23 Ultra": {"Android 13"}}
+    new_platform.system_versions_by_device_model = {"Samsung Galaxy S23 Ultra": {"Android 13"}}
     new_platform.app_versions_by_layer = {162: {"9.5.0"}}
 
     await client.update_client_platform(new_platform, reinit=True)
