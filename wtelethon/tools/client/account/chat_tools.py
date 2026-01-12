@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 class AccountChatTools:
     """Инструменты для работы с чатами аккаунта."""
 
-    async def join_public_channel(
-        self: "TelegramClient", link: str
-    ) -> tl_types.TypeChat:
+    async def join_public_channel(self: "TelegramClient", link: str) -> tl_types.TypeChat:
         """Присоединяется к каналу по ссылке.
 
         Args:
@@ -38,15 +36,11 @@ class AccountChatTools:
             raise ValueError("Invalid chat link")
 
         if entity.left is True:
-            entity = (await self(tl_functions.channels.JoinChannelRequest(link))).chats[
-                0
-            ]
+            entity = (await self(tl_functions.channels.JoinChannelRequest(link))).chats[0]
 
         return entity
 
-    async def check_private_link(
-        self: "TelegramClient", link: str
-    ) -> tl_types.ChatInvite:
+    async def check_private_link(self: "TelegramClient", link: str) -> tl_types.ChatInvite:
         """Проверяет, является ли ссылка на приватный чат.
 
         Args:
@@ -62,19 +56,15 @@ class AccountChatTools:
             >>> invite = await client.check_private_chat_link("https://t.me/joinchat/ABC123")
             >>> print(f"Ссылка на приватный чат: {invite.title}")
         """
-        if utils.is_private_chat_link(link):
+        if not utils.is_private_chat_link(link):
             raise ValueError("Invalid chat link")
 
         link_hash = utils.get_private_link_hash(link)
 
-        invite_type = await self(
-            tl_functions.messages.CheckChatInviteRequest(link_hash)
-        )
+        invite_type = await self(tl_functions.messages.CheckChatInviteRequest(link_hash))
         return invite_type
 
-    async def import_private_link(
-        self: "TelegramClient", link: str
-    ) -> tl_types.TypeChat:
+    async def import_private_link(self: "TelegramClient", link: str) -> tl_types.TypeChat:
         """Импортирует приватный чат по ссылке.
 
         Args:
@@ -96,9 +86,7 @@ class AccountChatTools:
 
         link_hash = utils.get_private_link_hash(link)
 
-        return (
-            await self(tl_functions.messages.ImportChatInviteRequest(link_hash))
-        ).chats[0]
+        return (await self(tl_functions.messages.ImportChatInviteRequest(link_hash))).chats[0]
 
     async def subscribe(
         self: "TelegramClient",
@@ -132,10 +120,7 @@ class AccountChatTools:
                 if any(
                     [
                         retry == 2,
-                        (
-                            isinstance(invite_type, tl_types.ChatInvite)
-                            and invite_requests_enabled is False
-                        ),
+                        (isinstance(invite_type, tl_types.ChatInvite) and invite_requests_enabled is False),
                     ]
                 ):
                     return False
