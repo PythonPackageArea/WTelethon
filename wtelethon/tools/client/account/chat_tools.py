@@ -81,7 +81,7 @@ class AccountChatTools:
             >>> chat = await client.import_private_link("https://t.me/joinchat/ABC123")
             >>> print(f"Импортированный чат: {chat.title}")
         """
-        if utils.is_private_chat_link(link):
+        if not utils.is_private_chat_link(link):
             raise ValueError("Invalid chat link")
 
         link_hash = utils.get_private_link_hash(link)
